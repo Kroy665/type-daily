@@ -1,12 +1,36 @@
 import Link from 'next/link'
 import React from 'react'
 import Image from 'next/image';
+import { sessionType } from "@/types/sessionType";
 
 import { useSession, signIn, signOut } from "next-auth/react";
 
-function Header() {
+function Header(
+    {
+        session
+    }: {
+        session: sessionType
+    }
+) {
 
-    const { data: session } = useSession();
+    const [showMenu, setShowMenu] = React.useState(false);
+    const showMenuRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const handleClick = (e: MouseEvent) => {
+            if (showMenuRef.current && !showMenuRef.current.contains(e.target as Node)) {
+                setShowMenu(false);
+            }
+        }
+
+        document.addEventListener('click', handleClick);
+
+        return () => {
+            document.removeEventListener('click', handleClick);
+        }
+    }, [])
+
+
 
     return (
         <header
@@ -16,8 +40,8 @@ function Header() {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 zIndex: 10,
-                backgroundColor: 'transparent',
-                opacity: 0.9,
+                backgroundColor: '#fff',
+                // opacity: 0.9,
                 // blur the background with 
                 backdropFilter: 'blur(30px)'
             }}
@@ -51,22 +75,48 @@ function Header() {
             </div>
             <div>
                 {session ? (
-                    <div>
+                    <div
+                        className='relative'
+                        ref={showMenuRef}
+                    >
                         {(session && session.user && session.user.image) ?
                             <Image
                                 src={(session && session.user && session.user.image)}
                                 alt="profile"
                                 width={40}
                                 height={40}
-                                className="rounded-full"
+                                className="rounded-full cursor-pointer hover:opacity-80 transition-all duration-300 ease-in-out"
+                                onClick={() => setShowMenu(!showMenu)}
                             />
                             :
                             <div
-                                className="bg-gray-300 w-10 h-10 rounded-full"
+                                className="bg-gray-600 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer text-white font-bold text-lg hover:bg-gray-500 transition-all duration-300 ease-in-out"
+                                onClick={() => setShowMenu(!showMenu)}
                             >
                                 {session.user?.name?.charAt(0)}
                             </div>
                         }
+                        <div
+                            className={"absolute top-10 right-0 w-32" + (showMenu ? " block" : " hidden")}
+
+                        >
+                            <div
+                                className="bg-white rounded-md shadow-md w-full py-2 px-3 flex flex-col gap-2"
+                            >
+                                <Link
+                                    href="/profile"
+                                    className="w-full text-left hover:bg-gray-100 px-2 py-1 rounded-md"
+                                >
+                                    Profile
+                                </Link>
+                                <button
+                                    onClick={() => signOut()}
+                                    className="text-red-500 w-full text-left hover:bg-red-100 px-2 py-1 rounded-md"
+                                >
+                                    Logout
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 ) : (
                     <button
