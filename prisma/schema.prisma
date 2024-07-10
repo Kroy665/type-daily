@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  refresh_token_expires_in Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index(userId)
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index(userId)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? // Add this line
+  image         String?
+  uuid          String?   @unique
+  accounts      Account[]
+  sessions      Session[]
+  hasOnboarded  Boolean   @default(false)
+
+  results Result[]
+
+  @@index([name])
+  @@index([email])
+  @@index([uuid])
+  @@index([hasOnboarded])
+}
+
+model Result {
+  id     String @id @default(cuid())
+  userId String
+
+  difficulty   String
+  selectedTime Int
+  wpm          Int
+  accuracy     Int
+  wrongWords   Int
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  created DateTime @default(now())
+  updated DateTime @default(now()) @updatedAt
+
+  @@index(userId)
+  @@index(created)
+}
