@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import { getSession } from "next-auth/react";
 import { GetServerSidePropsContext } from "next";
 import { sessionType } from "@/types/sessionType";
+import Layout from "@/components/Layout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,16 +16,9 @@ export default function Home({
   session: sessionType;
 }) {
   return (
-    <>
-      <Header 
-        session={session}
-      />
-      <div
-        className="w-full mt-20"
-      >
+    <Layout session={session}>
         <TypingSpeed />
-      </div>
-    </>
+    </Layout>
   );
 }
 
