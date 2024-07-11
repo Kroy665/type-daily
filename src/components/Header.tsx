@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect } from 'react'
 import Image from 'next/image';
 import { sessionType } from "@/types/sessionType";
 
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useStore } from '@/store';
 
 function Header(
     {
@@ -16,7 +17,19 @@ function Header(
     const [showMenu, setShowMenu] = React.useState(false);
     const showMenuRef = React.useRef<HTMLDivElement>(null);
 
-    React.useEffect(() => {
+    const { getResults } = useStore();
+
+    useEffect(() => {
+        const fetchResults = async () => {
+            const results = await getResults();
+            console.log("results:::",results);
+
+        }
+
+        fetchResults();
+    }, [])
+
+    useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             if (showMenuRef.current && !showMenuRef.current.contains(e.target as Node)) {
                 setShowMenu(false);
@@ -33,7 +46,7 @@ function Header(
 
 
     return (
-        <header
+        <div
             className="fixed top-0 left-0 flex gap-5 w-full px-5"
             style={{
                 height: '4.5rem',
@@ -46,12 +59,13 @@ function Header(
                 backdropFilter: 'blur(30px)'
             }}
         >
-            <h1
+            <Link
                 className="text-xl font-bold w-32"
+                href="/"
             >
                 Type Daily
-            </h1>
-            <div
+            </Link>
+            {/* <div
                 className="flex gap-5 max-md:flex-wrap"
             >
                 <Link
@@ -72,7 +86,7 @@ function Header(
                 >
                     Contact
                 </Link>
-            </div>
+            </div> */}
             <div>
                 {session ? (
                     <div
@@ -97,7 +111,7 @@ function Header(
                             </div>
                         }
                         <div
-                            className={"absolute top-10 right-0 w-32" + (showMenu ? " block" : " hidden")}
+                            className={"absolute top-10 right-0 w-36" + (showMenu ? " block" : " hidden")}
 
                         >
                             <div
@@ -109,8 +123,15 @@ function Header(
                                 >
                                     Profile
                                 </Link>
+                                <Link
+                                    href="/text"
+                                    className="w-full text-left hover:bg-gray-100 px-2 py-1 rounded-md"
+                                >
+                                    Texts
+                                </Link>
                                 <button
-                                    onClick={() => signOut()}
+                                    onClick={() =>  signOut({ callbackUrl: '/auth/login' })}
+                           
                                     className="text-red-500 w-full text-left hover:bg-red-100 px-2 py-1 rounded-md"
                                 >
                                     Logout
@@ -119,21 +140,15 @@ function Header(
                         </div>
                     </div>
                 ) : (
-                    <button
+                    <Link
                         className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                        onClick={() => {
-                            if (session) {
-                                signOut();
-                            } else {
-                                signIn("google");
-                            }
-                        }}
+                        href="/auth/login"
                     >
                         Login with Google
-                    </button>
+                    </Link>
                 )}
             </div>
-        </header>
+        </div>
     )
 }
 

@@ -69,11 +69,17 @@ model User {
   @@index([hasOnboarded])
 }
 
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
 model Result {
   id     String @id @default(cuid())
   userId String
 
-  difficulty   String
+  difficulty   Difficulty
   selectedTime Int
   wpm          Int
   accuracy     Int
@@ -84,5 +90,16 @@ model Result {
   updated DateTime @default(now()) @updatedAt
 
   @@index(userId)
+  @@index(created)
+}
+
+model Text {
+  id         String     @id @default(cuid())
+  text       String
+  difficulty Difficulty
+  time       Int
+  created    DateTime   @default(now())
+  updated    DateTime   @default(now()) @updatedAt
+
   @@index(created)
 }
