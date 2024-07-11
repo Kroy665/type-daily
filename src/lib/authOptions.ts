@@ -29,6 +29,9 @@ if (process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET) {
 
 
 const authOptions: NextAuthOptions = {
+    session: {
+        strategy: "jwt",
+    },
     pages: {
         signIn: "/auth/login",
         error: "/auth/error",
@@ -39,13 +42,19 @@ const authOptions: NextAuthOptions = {
     callbacks: {
         async session({ session, user, token }) {
             if (session.user) {
-                session.user.id = user?.id
+                session.user.id = user?.id ?? token.id;
             }
             return session;
         },
-        async signIn({ user, account, profile, email, credentials }) {
-            return true;
-        }
+        async signIn({ user }) {
+            return !!user;
+        },
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
     },
 }
 
