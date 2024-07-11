@@ -75,6 +75,9 @@ export const useStore = create<StoreTypes>((set, get) => ({
     getTexts: async () => {
         const res = await fetch('/api/text/get-all');
         const texts = await res.json();
+
+        // sort by text length smallest to largest
+        texts.sort((a: Text, b: Text) => a.text.split(' ').length - b.text.split(' ').length);
         set({ texts });
         return texts;
     },

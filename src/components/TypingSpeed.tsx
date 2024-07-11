@@ -193,6 +193,8 @@ const TypingSpeed = () => {
             >
                 <div
                     className="w-full h-64 border-2 border-gray-300 rounded-md p-2 flex flex-col overflow-y-auto text-sm"
+                    // prevent copy from this section
+                    style={{ userSelect: "none" }}
                 >
                     {text ? text.split(/[\n]+/).map((t, i) => (
                         <p key={i}>
