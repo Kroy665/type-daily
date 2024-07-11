@@ -41,6 +41,11 @@ function TextComp({
     }
 
 
+    const secToMin = (sec: number) => {
+        return Math.floor(sec / 60) + " mins";
+    }
+
+
 
 
     return (
@@ -154,7 +159,9 @@ function TextComp({
                                         {text.text.length > 50 ? text.text.slice(0, 50) + "..." : text.text}
                                     </td>
                                     <td className="border px-4 py-2">{text.difficulty}</td>
-                                    <td className="border px-4 py-2">{text.time}</td>
+                                    <td className="border px-4 py-2">
+                                        {secToMin(text.time)}
+                                    </td>
                                     <td className="border px-4 py-2">{text.text.split(" ").length}</td>
                                     <td className='border px-4 py-2'>
                                         <button
