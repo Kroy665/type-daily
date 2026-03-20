@@ -2,51 +2,57 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
 import authOptions from '@/lib/authOptions'
-import { User, Result, Text, Difficulty } from '@prisma/client'
+import { getRandomTextSchema } from '@/lib/validations'
+import { ZodError } from 'zod'
+import { Difficulty } from '@prisma/client'
+
 export default async function GET(req: NextApiRequest, res: NextApiResponse) {
-    const session = await getServerSession(req, res, authOptions)
-    if (!session || !session.user) {
-        return res.status(401).json({ message: 'Unauthorized' })
-    }
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: session.user.id
-        }
-    })
-
-    if (!user) {
-        return res.status(404).json({ message: 'User not found' })
-    }
-
-    if (req.method === 'GET') {
-        if (!('difficulty' in req.query) || !('time' in req.query)) {
-            return res.status(400).json({ message: 'Missing parameters: difficulty and time' })
+    try {
+        if (req.method !== 'GET') {
+            return res.status(405).json({ message: 'Method not allowed' })
         }
 
-        const {
-            difficulty,
-            time
-        } = req.query
-
-        const timeInt = parseInt(time as string)
-
-        if (!['EASY', 'MEDIUM', 'HARD'].includes(difficulty as string)) {
-            return res.status(400).json({ message: 'Invalid difficulty' })
+        const session = await getServerSession(req, res, authOptions)
+        if (!session || !session.user) {
+            return res.status(401).json({ message: 'Unauthorized' })
         }
+
+        const user = await prisma.user.findUnique({
+            where: {
+                id: session.user.id
+            }
+        })
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' })
+        }
+
+        // Validate query parameters
+        const { difficulty, time } = getRandomTextSchema.parse(req.query)
 
         const texts = await prisma.text.findMany({
             where: {
                 difficulty: difficulty as Difficulty,
-                time: timeInt
+                time
             }
         })
 
         if (texts.length === 0) {
-            return res.status(404).json({ message: 'Text not found' })
+            return res.status(404).json({ message: 'No texts found for this difficulty and time' })
         }
-        const randomText = texts[Math.floor(Math.random() * texts.length)]
 
+        const randomText = texts[Math.floor(Math.random() * texts.length)]
         return res.status(200).json(randomText)
+
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.issues
+            })
+        }
+
+        console.error('Error fetching random text:', error)
+        return res.status(500).json({ message: 'Internal server error' })
     }
 }

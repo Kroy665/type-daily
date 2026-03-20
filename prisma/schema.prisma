@@ -48,25 +48,44 @@ model Session {
   @@index(userId)
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id            String    @id @default(cuid())
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @default(now()) @updatedAt
   name          String?
   email         String    @unique
-  emailVerified DateTime? // Add this line
+  emailVerified DateTime?
   image         String?
   uuid          String?   @unique
+  role          Role      @default(USER)
   accounts      Account[]
   sessions      Session[]
   hasOnboarded  Boolean   @default(false)
 
-  results Result[]
+  // Stats for leaderboard
+  bestWpm       Int       @default(0)
+  bestAccuracy  Int       @default(0)
+  totalTests    Int       @default(0)
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastTestDate  DateTime?
+
+  results            Result[]
+  achievements       UserAchievement[]
+  dailyChallenges    DailyChallengeResult[]
 
   @@index([name])
   @@index([email])
   @@index([uuid])
   @@index([hasOnboarded])
+  @@index([role])
+  @@index([bestWpm])
+  @@index([currentStreak])
 }
 
 enum Difficulty {
@@ -101,5 +120,79 @@ model Text {
   created    DateTime   @default(now())
   updated    DateTime   @default(now()) @updatedAt
 
+  dailyChallenges DailyChallenge[]
+
   @@index(created)
+}
+
+enum AchievementType {
+  SPEED_DEMON      // 100+ WPM
+  PERFECTIONIST    // 100% accuracy
+  CONSISTENT       // 7-day streak
+  MARATHON         // 30-day streak
+  CENTURY          // 100 total tests
+  FIRST_TEST       // Complete first test
+  SPEED_50         // 50+ WPM
+  SPEED_75         // 75+ WPM
+  ACCURACY_90      // 90%+ accuracy
+  ACCURACY_95      // 95%+ accuracy
+}
+
+model Achievement {
+  id          String          @id @default(cuid())
+  type        AchievementType @unique
+  name        String
+  description String
+  icon        String          // emoji or icon name
+  created     DateTime        @default(now())
+
+  users UserAchievement[]
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+}
+
+model DailyChallenge {
+  id         String     @id @default(cuid())
+  date       DateTime   @unique // The date this challenge is for
+  textId     String
+  difficulty Difficulty
+  timeLimit  Int
+  created    DateTime   @default(now())
+
+  text    Text                   @relation(fields: [textId], references: [id], onDelete: Cascade)
+  results DailyChallengeResult[]
+
+  @@index([date])
+  @@index([textId])
+}
+
+model DailyChallengeResult {
+  id          String   @id @default(cuid())
+  userId      String
+  challengeId String
+  wpm         Int
+  accuracy    Int
+  wrongWords  Int
+  completed   Boolean  @default(true)
+  created     DateTime @default(now())
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, challengeId])
+  @@index([userId])
+  @@index([challengeId])
+  @@index([created])
 }

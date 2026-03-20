@@ -1,45 +1,39 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
-import authOptions from '@/lib/authOptions'
-import { User, Result, Text } from '@prisma/client'
+import { createTextSchema } from '@/lib/validations'
+import { ZodError } from 'zod'
+import { requireAdmin } from '@/lib/middleware/adminOnly'
+
 export default async function POST(req: NextApiRequest, res: NextApiResponse) {
-    const session = await getServerSession(req, res, authOptions)
-    if (!session || !session.user) {
-        return res.status(401).json({ message: 'Unauthorized' })
-    }
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: session.user.id
+    try {
+        if (req.method !== 'POST') {
+            return res.status(405).json({ message: 'Method not allowed' })
         }
-    })
 
-    if (!user) {
-        return res.status(404).json({ message: 'User not found' })
-    }
+        // Check if user is admin
+        const { authorized, error } = await requireAdmin(req, res)
+        if (!authorized) {
+            return res.status(error === 'Unauthorized' ? 401 : 403).json({ message: error })
+        }
 
-    if (req.method === 'POST') {
-
-        const {
-            text,
-            difficulty,
-            time
-        }: {
-            text: string,
-            difficulty: Text['difficulty'],
-            time: number
-        } = req.body
+        // Validate input
+        const validatedData = createTextSchema.parse(req.body)
 
         const textData = await prisma.text.create({
-            data: {
-                text,
-                difficulty,
-                time,
-            }
+            data: validatedData
         })
 
         return res.status(201).json(textData)
 
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: error.issues
+            })
+        }
+
+        console.error('Error creating text:', error)
+        return res.status(500).json({ message: 'Internal server error' })
     }
 }
