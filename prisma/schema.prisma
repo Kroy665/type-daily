@@ -77,7 +77,6 @@ model User {
 
   results            Result[]
   achievements       UserAchievement[]
-  dailyChallenges    DailyChallengeResult[]
 
   @@index([name])
   @@index([email])
@@ -120,8 +119,6 @@ model Text {
   created    DateTime   @default(now())
   updated    DateTime   @default(now()) @updatedAt
 
-  dailyChallenges DailyChallenge[]
-
   @@index(created)
 }
 
@@ -161,38 +158,4 @@ model UserAchievement {
   @@unique([userId, achievementId])
   @@index([userId])
   @@index([achievementId])
-}
-
-model DailyChallenge {
-  id         String     @id @default(cuid())
-  date       DateTime   @unique // The date this challenge is for
-  textId     String
-  difficulty Difficulty
-  timeLimit  Int
-  created    DateTime   @default(now())
-
-  text    Text                   @relation(fields: [textId], references: [id], onDelete: Cascade)
-  results DailyChallengeResult[]
-
-  @@index([date])
-  @@index([textId])
-}
-
-model DailyChallengeResult {
-  id          String   @id @default(cuid())
-  userId      String
-  challengeId String
-  wpm         Int
-  accuracy    Int
-  wrongWords  Int
-  completed   Boolean  @default(true)
-  created     DateTime @default(now())
-
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  challenge DailyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, challengeId])
-  @@index([userId])
-  @@index([challengeId])
-  @@index([created])
 }

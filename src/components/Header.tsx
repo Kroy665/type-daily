@@ -66,13 +66,6 @@ function Header(
                 className="flex gap-3 items-center max-md:hidden"
             >
                 <Link
-                    href="/challenge"
-                    className="px-4 py-2 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-yellow-400 hover:to-orange-500 hover:text-white transition-all flex items-center gap-2 group"
-                >
-                    <span className="group-hover:animate-bounce">🎯</span>
-                    Daily Challenge
-                </Link>
-                <Link
                     href="/leaderboard"
                     className="px-4 py-2 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white transition-all flex items-center gap-2 group"
                 >

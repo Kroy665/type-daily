@@ -24,16 +24,6 @@ export type Achievement = {
     unlockedAt: Date | null;
 };
 
-export type DailyChallenge = {
-    id: string;
-    date: Date;
-    text: string;
-    difficulty: string;
-    timeLimit: number;
-    completed: boolean;
-    userResult: any | null;
-};
-
 export type StoreTypes = {
     user: {
         id: string;
@@ -64,10 +54,6 @@ export type StoreTypes = {
 
     // Achievements
     getAchievements: () => Promise<Achievement[]>;
-
-    // Daily Challenge
-    getTodayChallenge: () => Promise<any>;
-    submitChallenge: (challengeId: string, wpm: number, accuracy: number, wrongWords: number) => Promise<any>;
 };
 
 export const useStore = create<StoreTypes>((set, get) => ({
@@ -156,29 +142,5 @@ export const useStore = create<StoreTypes>((set, get) => ({
         const res = await fetch('/api/achievements/user');
         const achievements = await res.json();
         return achievements;
-    },
-
-    // Daily Challenge functions
-    getTodayChallenge: async () => {
-        const res = await fetch('/api/challenges/today');
-        const challenge = await res.json();
-        return challenge;
-    },
-
-    submitChallenge: async (challengeId, wpm, accuracy, wrongWords) => {
-        const res = await fetch('/api/challenges/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                challengeId,
-                wpm,
-                accuracy,
-                wrongWords
-            }),
-        });
-        const result = await res.json();
-        return result;
     },
 }));
