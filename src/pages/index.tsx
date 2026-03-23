@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Inter } from "next/font/google";
-import TypingSpeed from "../components/TypingSpeed";
+import TypingTest from "../components/TypingTest";
 import texts from "@/static/texts";
 import Header from "@/components/Header";
 import { getSession } from "next-auth/react";
@@ -17,7 +17,7 @@ export default function Home({
 }) {
   return (
     <Layout session={session}>
-        <TypingSpeed />
+        <TypingTest />
     </Layout>
   );
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '@/store';
 import { useSession } from "next-auth/react";
 import { Difficulty } from ".prisma/client";
+import HeroSection from './HeroSection';
 
 const TypingSpeed = () => {
     const [text, setText] = useState("");
@@ -125,23 +126,16 @@ const TypingSpeed = () => {
     useEffect(() => {
         if (!isStart || !text) return;
 
-        const userWords = userText.trim().split(/\s+/);
         const sourceWords = text.split(/\s+/);
 
-        // Find the current word index
-        let newIndex = 0;
-        for (let i = 0; i < userWords.length; i++) {
-            if (i < sourceWords.length) {
-                // Move to next word if current word is complete (followed by space)
-                if (userText.endsWith(' ') && i === userWords.length - 1) {
-                    newIndex = i + 1;
-                } else if (i === userWords.length - 1) {
-                    newIndex = i;
-                }
-            }
-        }
+        // Count how many spaces the user has typed
+        const spaceCount = (userText.match(/\s/g) || []).length;
 
-        setCurrentWordIndex(Math.min(newIndex, sourceWords.length - 1));
+        // The current word is determined by the number of spaces typed
+        // After each space, we move to the next word
+        let newIndex = Math.min(spaceCount, sourceWords.length - 1);
+
+        setCurrentWordIndex(newIndex);
     }, [userText, text, isStart]);
 
     // Auto-scroll to current word
@@ -168,29 +162,42 @@ const TypingSpeed = () => {
 
     // Helper function to get word status (correct, incorrect, current, upcoming)
     const getWordStatus = (wordIndex: number) => {
-        const userWords = userText.trim().split(/\s+/).filter(Boolean);
         const sourceWords = text.split(/\s+/);
+        const userWords = userText.trim().split(/\s+/).filter(Boolean);
 
-        if (wordIndex < userWords.length - 1) {
-            // Already typed words (not the current one)
-            return userWords[wordIndex] === sourceWords[wordIndex] ? 'correct' : 'incorrect';
-        } else if (wordIndex === currentWordIndex) {
-            // Current word being typed
+        // If no user input yet, all words are upcoming except the first (which is current)
+        if (userWords.length === 0 || !userText) {
+            return wordIndex === 0 ? 'current' : 'upcoming';
+        }
+
+        // Check if this source word has been fully typed (user moved past it with a space)
+        const hasMovedPast = currentWordIndex > wordIndex;
+        const isCurrentWord = currentWordIndex === wordIndex;
+
+        if (hasMovedPast) {
+            // Check if this word was typed correctly at its position
+            const userWord = userWords[wordIndex] || '';
+            const sourceWord = sourceWords[wordIndex] || '';
+            return userWord === sourceWord ? 'correct' : 'incorrect';
+        }
+
+        if (isCurrentWord) {
             const currentUserWord = userWords[wordIndex] || '';
             const currentSourceWord = sourceWords[wordIndex] || '';
 
+            // Check if user input matches the beginning of the source word
             if (currentUserWord && !currentSourceWord.startsWith(currentUserWord)) {
                 return 'current-error';
             }
             return 'current';
-        } else {
-            // Upcoming words
-            return 'upcoming';
         }
+
+        // Words after the current position are upcoming
+        return 'upcoming';
     };
 
     return (
-        <div className="relative flex flex-col items-center justify-center w-full px-4 py-8 max-w-6xl mx-auto">
+        <div className="relative flex flex-col items-center justify-center w-full px-4 py-4 max-w-6xl mx-auto">
             {/* Confetti Effect */}
             {showConfetti && (
                 <div className="fixed inset-0 pointer-events-none z-50">
@@ -211,16 +218,6 @@ const TypingSpeed = () => {
                 </div>
             )}
 
-            {/* Hero Section */}
-            <div className="text-center mb-8 animate-slide-in-up">
-                <h1 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent animate-float">
-                    Type Daily ⚡
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-lg">
-                    Improve your typing speed one keystroke at a time! 🚀
-                </p>
-            </div>
-
             {/* Error Alert */}
             {error && (
                 <div className="w-full mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-2xl animate-scale-in">
@@ -232,7 +229,7 @@ const TypingSpeed = () => {
             )}
 
             {/* Controls Panel */}
-            <div className="w-full mb-6 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-6 hover-lift">
+            <div className="w-full mb-6 bg-white dark:bg-gray-800 rounded-3xl shadow-2xl px-6 py-4 hover-lift">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     {/* Difficulty Selector */}
                     <div className="flex flex-col gap-2 w-full md:w-auto">
@@ -405,10 +402,10 @@ const TypingSpeed = () => {
                         placeholder={isStart ? "Start typing here..." : "Press Start to begin..."}
                         autoFocus={isStart}
                     />
-                    <div className="mt-4 flex items-center justify-between text-base text-gray-600 dark:text-gray-400">
+                    {/* <div className="mt-4 flex items-center justify-between text-base text-gray-600 dark:text-gray-400">
                         <span>Words: <strong className="text-lg">{userText.trim().split(/\s+/).filter(Boolean).length}</strong></span>
                         <span>Characters: <strong className="text-lg">{userText.length}</strong></span>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
@@ -453,6 +450,9 @@ const TypingSpeed = () => {
                     </div>
                 </div>
             )}
+            <div className="container mx-auto px-4 mt-10">
+                <HeroSection />
+            </div>
         </div>
     );
 };
