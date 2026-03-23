@@ -1,20 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { signOut } from 'next-auth/react';
-import { useRouter } from 'next/router';
 
-function logout() {
-    const router = useRouter();
+function Logout() {
+    useEffect(() => {
+        signOut({
+            callbackUrl: `/`
+        });
+    }, []);
 
-    signOut({
-        callbackUrl: `/`
-    });
-
-    
     return (
-        <div>
-            Logout
+        <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+                <div className="text-4xl mb-4">👋</div>
+                <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">Logging out...</p>
+            </div>
         </div>
     )
 }
 
-export default logout
+export default Logout
+
+// Prevent static generation for this page
+export async function getServerSideProps() {
+    return { props: {} };
+}

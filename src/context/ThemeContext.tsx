@@ -43,11 +43,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
     };
 
-    // Prevent flash of incorrect theme
-    if (!mounted) {
-        return null;
-    }
-
     return (
         <ThemeContext.Provider value={{ theme, toggleTheme }}>
             {children}
