@@ -46,68 +46,68 @@ function Leaderboard({
 
     return (
         <Layout session={session}>
-            <div className="max-w-6xl mx-auto px-5 py-10">
-                <h1 className="text-4xl font-bold text-center mb-8 dark:text-white">🏆 Leaderboard</h1>
+            <div className="max-w-6xl mx-auto px-5 py-6">
+                <h1 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Leaderboard</h1>
 
                 {/* User's Rank Card */}
                 {userRank && (
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6 mb-8 shadow-lg">
+                    <div className="bg-blue-600 dark:bg-blue-700 text-white rounded border border-blue-700 dark:border-blue-600 p-4 mb-6">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="text-5xl font-bold">#{userRank.rank}</div>
+                                <div className="text-3xl font-bold">#{userRank.rank}</div>
                                 <div>
-                                    <p className="text-sm opacity-80">Your Rank</p>
-                                    <p className="text-2xl font-bold">{userRank.name}</p>
+                                    <p className="text-xs opacity-80">Your Rank</p>
+                                    <p className="text-lg font-semibold">{userRank.name}</p>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <p className="text-sm opacity-80">Best WPM</p>
-                                <p className="text-3xl font-bold">{userRank.bestWpm}</p>
-                                <p className="text-sm opacity-80 mt-2">Accuracy: {userRank.bestAccuracy}%</p>
+                                <p className="text-xs opacity-80">Best WPM</p>
+                                <p className="text-2xl font-bold">{userRank.bestWpm}</p>
+                                <p className="text-xs opacity-80 mt-1">Accuracy: {userRank.bestAccuracy}%</p>
                             </div>
                         </div>
-                        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                        <div className="mt-3 grid grid-cols-3 gap-4 text-center border-t border-blue-500 pt-3">
                             <div>
-                                <p className="text-sm opacity-80">Total Tests</p>
-                                <p className="text-xl font-bold">{userRank.totalTests}</p>
+                                <p className="text-xs opacity-80">Total Tests</p>
+                                <p className="text-base font-semibold">{userRank.totalTests}</p>
                             </div>
                             <div>
-                                <p className="text-sm opacity-80">Current Streak</p>
-                                <p className="text-xl font-bold">{userRank.currentStreak} 🔥</p>
+                                <p className="text-xs opacity-80">Current Streak</p>
+                                <p className="text-base font-semibold">{userRank.currentStreak}</p>
                             </div>
                             <div>
-                                <p className="text-sm opacity-80">Longest Streak</p>
-                                <p className="text-xl font-bold">{userRank.longestStreak}</p>
+                                <p className="text-xs opacity-80">Longest Streak</p>
+                                <p className="text-base font-semibold">{userRank.longestStreak}</p>
                             </div>
                         </div>
                     </div>
                 )}
 
                 {/* Sort Options */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
-                    <p className="text-sm font-semibold mb-2 dark:text-gray-200">Sort by:</p>
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3 mb-4">
+                    <p className="text-xs font-medium mb-2 text-gray-600 dark:text-gray-400">Sort by:</p>
                     <div className="flex gap-2 flex-wrap">
                         <button
                             onClick={() => setOrderBy('bestWpm')}
-                            className={`px-4 py-2 rounded-md ${orderBy === 'bestWpm' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
+                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'bestWpm' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                         >
                             Best WPM
                         </button>
                         <button
                             onClick={() => setOrderBy('bestAccuracy')}
-                            className={`px-4 py-2 rounded-md ${orderBy === 'bestAccuracy' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
+                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'bestAccuracy' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                         >
                             Best Accuracy
                         </button>
                         <button
                             onClick={() => setOrderBy('currentStreak')}
-                            className={`px-4 py-2 rounded-md ${orderBy === 'currentStreak' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
+                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'currentStreak' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                         >
                             Current Streak
                         </button>
                         <button
                             onClick={() => setOrderBy('totalTests')}
-                            className={`px-4 py-2 rounded-md ${orderBy === 'totalTests' ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700 dark:text-gray-200'}`}
+                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'totalTests' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                         >
                             Total Tests
                         </button>
@@ -115,71 +115,69 @@ function Leaderboard({
                 </div>
 
                 {/* Leaderboard Table */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                        <div className="flex items-center justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                     ) : (
-                        <table className="w-full">
-                            <thead className="bg-gray-50 dark:bg-gray-700">
+                        <table className="w-full text-sm">
+                            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Rank</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Player</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">WPM</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Accuracy</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Tests</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Streak</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Rank</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Player</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">WPM</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Accuracy</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Tests</th>
+                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Streak</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {leaderboard.map((user) => (
                                     <tr
                                         key={user.id}
-                                        className={`${user.id === session?.user?.id ? 'bg-indigo-50 dark:bg-indigo-900/30' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                                        className={`${user.id === session?.user?.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'} transition-colors`}
                                     >
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-2xl">{getRankBadge(user.rank)}</span>
-                                                <span className="text-lg font-semibold dark:text-gray-200">#{user.rank}</span>
+                                        <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <div className="flex items-center gap-1.5">
+                                                {getRankBadge(user.rank) && <span className="text-lg">{getRankBadge(user.rank)}</span>}
+                                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">#{user.rank}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-3">
+                                        <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
                                                 {user.image ? (
-                                                    <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                                                    <div className="relative w-7 h-7 rounded-full overflow-hidden">
                                                         <Image
                                                             src={user.image}
                                                             alt={user.name || 'User'}
                                                             fill
                                                             className="object-cover"
-                                                            sizes="40px"
+                                                            sizes="28px"
                                                         />
                                                     </div>
                                                 ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                                                        <span className="text-gray-600 dark:text-gray-200 font-bold">
-                                                            {user.name?.charAt(0) || '?'}
-                                                        </span>
+                                                    <div className="w-7 h-7 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200">
+                                                        {user.name?.charAt(0) || '?'}
                                                     </div>
                                                 )}
-                                                <span className="font-medium dark:text-gray-200">{user.name || 'Anonymous'}</span>
+                                                <span className="text-sm font-medium text-gray-900 dark:text-gray-200">{user.name || 'Anonymous'}</span>
                                                 {user.id === session?.user?.id && (
-                                                    <span className="text-xs bg-indigo-600 text-white px-2 py-1 rounded">You</span>
+                                                    <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">You</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{user.bestWpm}</span>
+                                        <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{user.bestWpm}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm dark:text-gray-300">{user.bestAccuracy}%</span>
+                                        <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">{user.bestAccuracy}%</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm dark:text-gray-300">{user.totalTests}</span>
+                                        <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">{user.totalTests}</span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="text-sm dark:text-gray-300">{user.currentStreak} 🔥</span>
+                                        <td className="px-4 py-2.5 whitespace-nowrap">
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">{user.currentStreak}</span>
                                         </td>
                                     </tr>
                                 ))}

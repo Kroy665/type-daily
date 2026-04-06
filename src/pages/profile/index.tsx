@@ -25,8 +25,8 @@ type DataType = {
     }[];
 };
 
-const accuracyColor = 'rgb(255, 99, 132)';
-const wpmColor = 'rgb(54, 162, 235)';
+const accuracyColor = 'rgb(239, 68, 68)';
+const wpmColor = 'rgb(59, 130, 246)';
 
 function Profile({
     session
@@ -57,14 +57,11 @@ function Profile({
                 setAchievements(achievementsData);
                 setUserRank(rankData);
 
-                // Sort results by date
                 const sortedResults = results.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
 
-                // Extract accuracy, WPM, and date
                 const accuracyData = sortedResults.map(result => result.accuracy);
                 const wpmData = sortedResults.map(result => result.wpm);
 
-                // only show the 20 most recent results with date and month
                 const dateLabels = sortedResults.slice(Math.max(sortedResults.length - 20, 0)).map(result => {
                     const date = new Date(result.created);
                     return `${date.getDate()}/${date.getMonth() + 1}`;
@@ -78,14 +75,14 @@ function Profile({
                             data: accuracyData,
                             fill: false,
                             backgroundColor: accuracyColor,
-                            borderColor: 'rgba(255, 99, 132, 0.5)',
+                            borderColor: 'rgba(239, 68, 68, 0.5)',
                         },
                         {
                             label: 'WPM',
                             data: wpmData,
                             fill: false,
                             backgroundColor: wpmColor,
-                            borderColor: 'rgba(54, 162, 235, 0.5)',
+                            borderColor: 'rgba(59, 130, 246, 0.5)',
                         },
                     ],
                 };
@@ -110,7 +107,7 @@ function Profile({
         if(hours === 0)
             return `${minutes}m ${seconds}s`;
 
-        return `${hours}h ${minutes}m ${seconds}s`;
+        return `${hours}h ${minutes}m`;
     }
 
 
@@ -121,25 +118,24 @@ function Profile({
             {isLoading ? (
                 <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                        <p className="text-gray-600 dark:text-gray-300">Loading your profile...</p>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">Loading profile...</p>
                     </div>
                 </div>
             ) : (
             <div
-                className="flex flex-col gap-5 mx-5 md:mx-0 mt-10 md:mt-20"
+                className="flex flex-col gap-4 mx-5 md:mx-0 mt-6 md:mt-8 max-w-6xl mx-auto px-5"
             >
-                {/* user data Card */}
+                {/* User Stats Grid */}
                 <div
-                    className="flex gap-5 flex-col md:flex-row w-full md:w-3/4 mx-auto"
+                    className="grid md:grid-cols-2 gap-4"
                 >
-                    {/* profile Card */}
-
+                    {/* Profile Card */}
                     <div
-                        className="flex gap-5 bg-white p-5 rounded-lg shadow-md items-center"
+                        className="flex gap-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded items-center"
                     >
                         <div
-                            className="w-20 h-20 rounded-full overflow-hidden relative"
+                            className="w-16 h-16 rounded-full overflow-hidden relative flex-shrink-0 bg-gray-100 dark:bg-gray-700"
                         >
                             {session?.user?.image && (
                                 <Image
@@ -147,102 +143,101 @@ function Profile({
                                     alt="profile"
                                     fill
                                     className="object-cover"
-                                    sizes="80px"
+                                    sizes="64px"
                                 />
                             )}
                         </div>
                         <div
-                            className="flex flex-col gap-2"
+                            className="flex flex-col gap-1 min-w-0"
                         >
                             <h1
-                                className="text-2xl"
+                                className="text-lg font-semibold text-gray-900 dark:text-white truncate"
                             >
                                 {session?.user?.name}
                             </h1>
                             <p
-                                className="text-sm"
+                                className="text-xs text-gray-600 dark:text-gray-400 truncate"
                             >
                                 {session?.user?.email}
                             </p>
-                            {/* Total Time spent */}
                             <p
-                                className="text-sm"
+                                className="text-xs text-gray-600 dark:text-gray-400"
                             >
-                                {calculateTimeSpent(results.reduce((acc, result) => acc + result.selectedTime, 0))}
+                                Total time: {calculateTimeSpent(results.reduce((acc, result) => acc + result.selectedTime, 0))}
                             </p>
                         </div>
                     </div>
 
-                    {/* total results, total correct, total incorrect Card */}
+                    {/* Stats Card */}
                     <div
-                        className="flex gap-5 bg-white p-5 rounded-lg shadow-md w-full md:w-1/2 justify-between"
+                        className="flex gap-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded justify-between"
                     >
                         <div
-                            className="flex flex-col gap-5"
+                            className="flex flex-col gap-1"
                         >
-                            <h1
-                                className="text-md"
+                            <h2
+                                className="text-xs text-gray-600 dark:text-gray-400"
                             >
-                                Total Results
-                            </h1>
+                                Total Tests
+                            </h2>
                             <p
-                                className="text-sm"
+                                className="text-xl font-semibold text-gray-900 dark:text-white"
                             >
                                 {results.length}
                             </p>
                         </div>
                         <div
-                            className="flex flex-col gap-5"
+                            className="flex flex-col gap-1"
                         >
-                            <h1
-                                className="text-md"
+                            <h2
+                                className="text-xs text-gray-600 dark:text-gray-400"
                             >
-                                Avarage accuracy
-                            </h1>
+                                Avg Accuracy
+                            </h2>
                             <p
-                                className="text-sm"
+                                className="text-xl font-semibold"
                                 style={{ color: accuracyColor }}
                             >
-                                {results.filter(result => result.accuracy).length > 0 ? (results.reduce((acc, result) => acc + result.accuracy, 0) / results.length).toFixed(2) : 0}%
+                                {results.filter(result => result.accuracy).length > 0 ? (results.reduce((acc, result) => acc + result.accuracy, 0) / results.length).toFixed(1) : 0}%
                             </p>
                         </div>
                         <div
-                            className="flex flex-col gap-5"
+                            className="flex flex-col gap-1"
                         >
-                            <h1
-                                className="text-md"
+                            <h2
+                                className="text-xs text-gray-600 dark:text-gray-400"
                             >
-                                Avarage WPM
-                            </h1>
+                                Avg WPM
+                            </h2>
                             <p
-                                className="text-sm"
+                                className="text-xl font-semibold"
                                 style={{ color: wpmColor }}
                             >
-                                {results.filter(result => result.wpm).length > 0 ? (results.reduce((acc, result) => acc + result.wpm, 0) / results.length).toFixed(2) : 0}
+                                {results.filter(result => result.wpm).length > 0 ? (results.reduce((acc, result) => acc + result.wpm, 0) / results.length).toFixed(1) : 0}
                             </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Achievements Section */}
-                <div className="w-full md:w-3/4 mx-auto mb-10">
-                    <h2 className="text-2xl font-bold dark:text-white mb-4">Achievements</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Achievements</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                         {achievements.map((achievement) => (
                             <div
                                 key={achievement.id}
-                                className={`p-4 rounded-lg ${
+                                className={`p-3 rounded border text-center ${
                                     achievement.unlocked
-                                        ? 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-400'
-                                        : 'bg-gray-100 border-2 border-gray-300 opacity-50'
+                                        ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700'
+                                        : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-50'
                                 }`}
                             >
-                                <div className="text-4xl mb-2 text-center">{achievement.icon}</div>
-                                <h3 className="font-bold text-sm text-center">{achievement.name}</h3>
-                                <p className="text-xs text-gray-600 dark:text-gray-300 text-center mt-1">{achievement.description}</p>
+                                <div className="text-2xl mb-1">{achievement.icon}</div>
+                                <h3 className="font-medium text-xs text-gray-900 dark:text-gray-100">{achievement.name}</h3>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{achievement.description}</p>
                                 {achievement.unlocked && achievement.unlockedAt && (
-                                    <p className="text-xs text-yellow-700 text-center mt-2">
-                                        Unlocked {new Date(achievement.unlockedAt).toLocaleDateString()}
+                                    <p className="text-xs text-yellow-700 dark:text-yellow-500 mt-1">
+                                        {new Date(achievement.unlockedAt).toLocaleDateString()}
                                     </p>
                                 )}
                             </div>
@@ -252,27 +247,30 @@ function Profile({
 
                 {/* Graph Section */}
                 <div
-                    className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md w-full mb-10 md:mb-20"
+                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded"
                 >
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Performance History</h2>
                     <Line
                         data={data}
-                        className='w-full h-96'
-                        // with smooth curve
+                        className='w-full'
+                        style={{ maxHeight: '300px' }}
                         options={{
                             elements: {
                                 line: {
                                     tension: 0.4
                                 },
                                 point:{
-                                    radius: 1
+                                    radius: 2
                                 }
                             },
                             plugins: {
                                 legend: {
                                     display: true,
-                                    position: 'bottom', // or 'bottom', 'left', 'right'
+                                    position: 'bottom',
                                 },
                             },
+                            maintainAspectRatio: true,
+                            responsive: true,
                         }}
                     />
                 </div>
@@ -295,7 +293,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
                 permanent: false,
             },
         }
-        
+
 
 
     return {

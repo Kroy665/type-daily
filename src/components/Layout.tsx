@@ -17,7 +17,7 @@ function Layout({
                 session={session}
             />
             <div
-                className="w-full mt-20"
+                className="w-full mt-16"
             >
                 {children}
             </div>

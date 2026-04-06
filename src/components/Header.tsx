@@ -47,42 +47,44 @@ function Header(
 
     return (
         <div
-            className="fixed top-0 left-0 flex gap-5 w-full px-5 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800 shadow-sm"
+            className="fixed top-0 left-0 flex gap-4 w-full px-6 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-800"
             style={{
-                height: '4.5rem',
+                height: '3.5rem',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 zIndex: 10,
             }}
         >
             <Link
-                className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-pink-500 to-blue-500 bg-clip-text text-transparent hover:scale-105 transition-transform flex items-center gap-2"
+                className="text-xl font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 href="/"
             >
-                <span className="text-3xl">⚡</span>
-                Type Daily
+                TypeDaily
             </Link>
             <div
-                className="flex gap-3 items-center max-md:hidden"
+                className="flex gap-4 items-center max-md:hidden"
             >
                 <Link
                     href="/leaderboard"
-                    className="px-4 py-2 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white transition-all flex items-center gap-2 group"
+                    className="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
-                    <span className="group-hover:animate-bounce">🏆</span>
                     Leaderboard
                 </Link>
 
                 {/* Dark Mode Toggle */}
                 <button
                     onClick={toggleTheme}
-                    className="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all"
+                    className="p-1.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
                     aria-label="Toggle dark mode"
                 >
                     {theme === 'dark' ? (
-                        <span className="text-2xl">☀️</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
                     ) : (
-                        <span className="text-2xl">🌙</span>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
                     )}
                 </button>
             </div>
@@ -140,11 +142,10 @@ function Header(
                     </div>
                 ) : (
                     <Link
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:scale-105 transition-transform shadow-lg hover:shadow-xl flex items-center gap-2"
+                        className="bg-blue-600 text-white px-4 py-1.5 text-sm font-medium rounded hover:bg-blue-700 transition-colors"
                         href="/auth/login"
                     >
-                        <span>🚀</span>
-                        Login with Google
+                        Sign In
                     </Link>
                 )}
             </div>

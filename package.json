@@ -10,8 +10,8 @@
     "build": "next build && prisma generate",
     "start": "next start",
     "lint": "next lint",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
-    "add-texts": "ts-node --compiler-options {\"module\":\"CommonJS\"} scripts/add-sample-texts.ts"
+    "seed": "npx tsx prisma/seed.ts",
+    "add-texts": "npx tsx scripts/add-sample-texts.ts"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",

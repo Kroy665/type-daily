@@ -5,39 +5,46 @@
 @import './animations.css';
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 240, 242, 255;
-  --background-end-rgb: 255, 255, 255;
+  --foreground-rgb: 15, 23, 42;
+  --background-rgb: 248, 250, 252;
 
-  /* Custom color palette */
-  --primary: 102, 126, 234;
-  --secondary: 118, 75, 162;
-  --accent: 240, 147, 251;
-  --success: 72, 187, 120;
-  --warning: 251, 191, 36;
-  --error: 239, 68, 68;
+  /* Professional color palette */
+  --primary: 37, 99, 235;
+  --secondary: 71, 85, 105;
+  --accent: 13, 148, 136;
+  --success: 5, 150, 105;
+  --warning: 217, 119, 6;
+  --error: 220, 38, 38;
+
+  /* Neutral grays */
+  --gray-50: 248, 250, 252;
+  --gray-100: 241, 245, 249;
+  --gray-200: 226, 232, 240;
+  --gray-300: 203, 213, 225;
+  --gray-600: 71, 85, 105;
+  --gray-700: 51, 65, 85;
+  --gray-800: 30, 41, 59;
+  --gray-900: 15, 23, 42;
 }
 
 /* Dark mode variables */
 .dark {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 17, 24, 39;
-  --background-end-rgb: 31, 41, 55;
+  --foreground-rgb: 241, 245, 249;
+  --background-rgb: 15, 23, 42;
 
   /* Dark mode color adjustments */
-  --primary: 129, 140, 248;
-  --secondary: 168, 85, 247;
-  --accent: 244, 114, 182;
-  --success: 34, 197, 94;
-  --warning: 234, 179, 8;
+  --primary: 59, 130, 246;
+  --secondary: 148, 163, 184;
+  --accent: 20, 184, 166;
+  --success: 16, 185, 129;
+  --warning: 251, 146, 60;
   --error: 248, 113, 113;
 }
 
 body {
-  background: linear-gradient(180deg,
-    rgb(var(--background-start-rgb)) 0%,
-    rgb(var(--background-end-rgb)) 100%);
+  background: rgb(var(--background-rgb));
   min-height: 100vh;
   color: rgb(var(--foreground-rgb));
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
 }
