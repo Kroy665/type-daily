@@ -17,7 +17,7 @@ const Word = memo(function Word({ word, typed, state }: { word: string; typed: s
                 const cls =
                     typedChar === undefined
                         ? state === 'done'
-                            ? 'text-danger/50' // skipped by an early space
+                            ? 'text-danger' // skipped by an early space; the word is underlined as wrong
                             : 'text-subtle'
                         : typedChar === char
                           ? 'text-fg'
@@ -29,7 +29,9 @@ const Word = memo(function Word({ word, typed, state }: { word: string; typed: s
                 );
             })}
             {extra.split('').map((char, i) => (
-                <span key={`x${i}`} data-ch="" className="text-danger/60">
+                // Extra letters: full-strength red on a light tint, so they stand out
+                // without dropping below 4.5:1 contrast.
+                <span key={`x${i}`} data-ch="" className="bg-danger/[0.08] text-danger">
                     {char}
                 </span>
             ))}

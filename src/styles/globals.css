@@ -5,6 +5,11 @@
 /*
  * Color tokens as RGB channels so Tailwind's opacity modifiers work
  * (e.g. bg-accent/10). Mapped to utilities in tailwind.config.ts.
+ *
+ * Every text color meets WCAG AA (4.5:1) against bg, surface and surface-2
+ * in its theme; the caret meets the 3:1 minimum for UI elements. `subtle` is
+ * the untyped passage text, so it must stay readable while remaining clearly
+ * dimmer than `fg` (typed text).
  */
 :root {
   --bg: 250 250 247;
@@ -12,15 +17,15 @@
   --surface-2: 243 243 239;
   --border: 226 226 220;
   --fg: 24 24 27;
-  --muted: 98 98 110;
-  --subtle: 163 163 172;
+  --muted: 81 81 90;
+  --subtle: 106 106 112;
   --accent: 245 166 35;
   --accent-fg: 28 20 6;
-  --accent-text: 180 95 6;
-  --success: 22 150 75;
-  --danger: 214 48 49;
-  --warning: 217 108 20;
-  --caret: 233 140 10;
+  --accent-text: 160 84 5;
+  --success: 18 123 62;
+  --danger: 202 45 46;
+  --warning: 168 83 15;
+  --caret: 195 117 8;
   color-scheme: light;
 }
 
@@ -30,8 +35,8 @@
   --surface-2: 30 33 41;
   --border: 42 46 56;
   --fg: 232 232 228;
-  --muted: 146 150 162;
-  --subtle: 84 89 102;
+  --muted: 165 169 178;
+  --subtle: 137 141 150;
   --accent: 247 185 85;
   --accent-fg: 28 20 6;
   --accent-text: 247 185 85;

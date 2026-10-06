@@ -220,12 +220,18 @@ export default function Profile() {
                                         <li
                                             key={a.id}
                                             className={`flex items-center gap-3 rounded-lg border p-3 ${
-                                                a.unlocked ? 'border-accent/30 bg-accent/5' : 'border-border opacity-50 grayscale'
+                                                a.unlocked ? 'border-accent/30 bg-accent/5' : 'border-dashed border-border'
                                             }`}
                                         >
-                                            <span className="text-2xl" aria-hidden="true">{a.icon}</span>
+                                            {/* Only the icon is faded for locked achievements; the text keeps full contrast. */}
+                                            <span className={`text-2xl ${a.unlocked ? '' : 'opacity-40 grayscale'}`} aria-hidden="true">
+                                                {a.icon}
+                                            </span>
                                             <div className="min-w-0">
-                                                <p className="truncate text-sm font-medium text-fg">{a.name}</p>
+                                                <p className={`truncate text-sm font-medium ${a.unlocked ? 'text-fg' : 'text-muted'}`}>
+                                                    {a.name}
+                                                    {!a.unlocked && <span className="sr-only"> (locked)</span>}
+                                                </p>
                                                 <p className="truncate text-xs text-muted">
                                                     {a.unlocked && a.unlockedAt
                                                         ? `Unlocked ${new Date(a.unlockedAt).toLocaleDateString()}`
