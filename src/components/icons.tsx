@@ -73,6 +73,13 @@ export const RefreshIcon = (p: IconProps) => (
     </Icon>
 );
 
+export const RestartIcon = (p: IconProps) => (
+    <Icon {...p}>
+        <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+        <path d="M3 3v5h5" />
+    </Icon>
+);
+
 export const ArrowRightIcon = (p: IconProps) => (
     <Icon {...p}>
         <path d="M5 12h14M12 5l7 7-7 7" />

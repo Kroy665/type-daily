@@ -4,7 +4,7 @@ import { useTypingTest, type TestConfig } from './useTypingTest';
 import WordsView, { type TypingInputHandle } from './WordsView';
 import ClassicView from './ClassicView';
 import ResultsPanel from './ResultsPanel';
-import { RefreshIcon } from '@/components/icons';
+import { RefreshIcon, RestartIcon } from '@/components/icons';
 
 type View = 'inline' | 'classic';
 
@@ -128,60 +128,72 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     }, [nextText, restart, status]);
 
     const live = test.liveScore;
+    // WPM over the first couple of seconds is mostly noise; hold it back until it settles.
+    const liveSettled = prefs.duration * 1000 - test.remainingMs >= 2000;
+    const finished = test.status === 'finished';
 
     return (
-        <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
-            {/* Config */}
-            <div
-                className={`mb-10 flex flex-wrap items-center justify-center gap-2 transition-opacity duration-300 sm:gap-3 ${
-                    running ? 'pointer-events-none opacity-0' : 'opacity-100'
-                }`}
-            >
-                <Segmented
-                    label="Difficulty"
-                    value={prefs.difficulty}
-                    options={DIFFICULTIES.map((d) => ({ value: d, label: d.charAt(0) + d.slice(1).toLowerCase() }))}
-                    onChange={(difficulty: DifficultyValue) => updatePrefs({ difficulty })}
-                    disabled={running}
-                />
-                <Segmented
-                    label="Duration"
-                    value={prefs.duration}
-                    options={DURATIONS.map((d) => ({ value: d, label: DURATION_LABELS[d] }))}
-                    onChange={(duration: DurationValue) => updatePrefs({ duration })}
-                    disabled={running}
-                />
-                <Segmented
-                    label="View"
-                    value={prefs.view}
-                    options={[
-                        { value: 'inline' as View, label: 'Inline' },
-                        { value: 'classic' as View, label: 'Classic' },
-                    ]}
-                    onChange={(view: View) => updatePrefs({ view })}
-                    disabled={running}
-                />
+        <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-4 sm:px-6">
+            {/* Toolbar: timer, settings and live stats share one row on wide screens.
+                Settings fade out while typing (and collapse on phones) to keep focus on the text. */}
+            <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-4">
+                <div
+                    className={`order-1 min-w-[5.5rem] font-mono text-3xl font-semibold tabular-nums text-accent-text ${
+                        finished ? 'invisible' : ''
+                    }`}
+                    aria-label="Time remaining"
+                >
+                    {formatClock(test.remainingMs)}
+                </div>
+                <div
+                    className={`order-3 flex w-full flex-wrap items-center justify-center gap-2 transition-opacity duration-300 lg:order-2 lg:w-auto lg:flex-1 ${
+                        running ? 'pointer-events-none opacity-0 max-lg:hidden' : 'opacity-100'
+                    }`}
+                >
+                    <Segmented
+                        label="Difficulty"
+                        value={prefs.difficulty}
+                        options={DIFFICULTIES.map((d) => ({ value: d, label: d.charAt(0) + d.slice(1).toLowerCase() }))}
+                        onChange={(difficulty: DifficultyValue) => updatePrefs({ difficulty })}
+                        disabled={running}
+                    />
+                    <Segmented
+                        label="Duration"
+                        value={prefs.duration}
+                        options={DURATIONS.map((d) => ({ value: d, label: DURATION_LABELS[d] }))}
+                        onChange={(duration: DurationValue) => updatePrefs({ duration })}
+                        disabled={running}
+                    />
+                    <Segmented
+                        label="View"
+                        value={prefs.view}
+                        options={[
+                            { value: 'inline' as View, label: 'Inline' },
+                            { value: 'classic' as View, label: 'Classic' },
+                        ]}
+                        onChange={(view: View) => updatePrefs({ view })}
+                        disabled={running}
+                    />
+                </div>
+                <div
+                    className={`order-2 ml-auto flex min-w-[5.5rem] justify-end gap-5 font-mono text-sm text-muted transition-opacity lg:order-3 ${
+                        running ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    aria-live="off"
+                >
+                    <span>
+                        <span className="tabular-nums text-fg">{live && liveSettled ? live.wpm : '–'}</span> wpm
+                    </span>
+                    <span>
+                        <span className="tabular-nums text-fg">{live && liveSettled ? `${live.accuracy}%` : '–'}</span> acc
+                    </span>
+                </div>
             </div>
 
             {test.status === 'finished' && test.result ? (
                 <ResultsPanel result={test.result} duration={prefs.duration} onNext={test.nextText} onRestart={test.restart} />
             ) : (
                 <section aria-label="Typing test">
-                    {/* Live stats */}
-                    <div className="mb-4 flex items-end justify-between font-mono">
-                        <div className="text-3xl font-semibold text-accent-text tabular-nums" aria-label="Time remaining">
-                            {formatClock(test.remainingMs)}
-                        </div>
-                        <div className={`flex gap-5 text-sm text-muted transition-opacity ${running ? 'opacity-100' : 'opacity-0'}`}>
-                            <span>
-                                <span className="text-fg tabular-nums">{live?.wpm ?? 0}</span> wpm
-                            </span>
-                            <span>
-                                <span className="text-fg tabular-nums">{live?.accuracy ?? 100}%</span> acc
-                            </span>
-                        </div>
-                    </div>
-
                     {test.status === 'error' ? (
                         <div className="card flex flex-col items-center gap-4 px-6 py-12 text-center">
                             <p className="text-sm text-danger">{test.error}</p>
@@ -216,29 +228,27 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                     )}
 
                     {/* Progress */}
-                    <div className="mt-6 h-0.5 overflow-hidden rounded-full bg-surface-2">
+                    <div className="mt-3 h-0.5 overflow-hidden rounded-full bg-surface-2">
                         <div
                             className="h-full bg-accent transition-[width] duration-200"
                             style={{ width: `${test.progress * 100}%` }}
                         />
                     </div>
 
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-subtle">
-                        <button
-                            type="button"
-                            onClick={test.nextText}
-                            className="btn-ghost px-3 py-1.5 text-xs"
-                            aria-label="New text"
-                        >
-                            <RefreshIcon width={14} height={14} /> New text
+                    {/* Visible buttons for mouse and touch users; the shortcut is shown on each. */}
+                    <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs">
+                        <button type="button" onClick={test.restart} className="btn-ghost px-3 py-1.5 text-xs">
+                            <RestartIcon width={14} height={14} /> Restart
+                            <kbd className="kbd hidden sm:inline">esc</kbd>
                         </button>
-                        <span className="hidden sm:inline">
-                            <kbd className="kbd">tab</kbd> new text
+                        <button type="button" onClick={test.nextText} className="btn-ghost px-3 py-1.5 text-xs">
+                            <RefreshIcon width={14} height={14} /> New text
+                            <kbd className="kbd hidden sm:inline">tab</kbd>
+                        </button>
+                        {/* Same row as the buttons so it costs no extra height. */}
+                        <span className={`px-2 text-subtle ${test.status === 'ready' ? '' : 'invisible'}`}>
+                            The timer starts on your first keystroke.
                         </span>
-                        <span className="hidden sm:inline">
-                            <kbd className="kbd">esc</kbd> restart
-                        </span>
-                        <span>timer starts on your first keystroke</span>
                     </div>
                 </section>
             )}
@@ -257,7 +267,7 @@ export default function TypingTest({ duration }: { duration?: DurationValue }) {
     }, [duration]);
 
     if (!initial) {
-        return <div className="mx-auto min-h-[26rem] w-full max-w-5xl" />;
+        return <div className="mx-auto min-h-[30rem] w-full max-w-7xl" />;
     }
     return <TypingTestInner initial={initial} />;
 }

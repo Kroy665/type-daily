@@ -10,13 +10,14 @@ const FONT_DIR = path.join(process.cwd(), 'src/assets/fonts');
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
+// Mirrors the dark theme tokens in globals.css.
 export const OG_COLORS = {
     bg: '#0e0f13',
     surface: '#16181e',
     border: '#2a2e38',
     fg: '#e8e8e4',
-    muted: '#9296a2',
-    subtle: '#545966',
+    muted: '#a5a9b2',
+    subtle: '#898d96',
     accent: '#f7b955',
     accentFg: '#1c1406',
     success: '#6ed68c',

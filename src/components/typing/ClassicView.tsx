@@ -1,5 +1,13 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import type { TypingInputHandle } from './WordsView';
+import { TEST_AREA_HEIGHT, TYPING_TEXT, Word, type TypingInputHandle } from './WordsView';
+
+// Both panes share one look and size: the same text style as the inline view,
+// tall enough to read several lines ahead, scaled to the viewport.
+// On wider screens the panes fill the test area (same height as the inline
+// view). On phones the typing box is
+// shorter so both panes stay above the on-screen keyboard. Scrollbars are
+// hidden; the panes still scroll (and follow the current word) as you type.
+const PANE = `no-scrollbar rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 ${TEST_AREA_HEIGHT} ${TYPING_TEXT}`;
 
 interface Props {
     words: string[];
@@ -8,55 +16,45 @@ interface Props {
     onInput: (value: string) => void;
 }
 
-// Source text on one side and a plain text box on the other, with word-level
-// feedback. Shares input handling and scoring with the inline view.
+// Source text beside a plain text box. Uses the same per-letter feedback,
+// typography and scoring as the inline view.
 const ClassicView = forwardRef<TypingInputHandle, Props>(function ClassicView({ words, typed, disabled, onInput }, ref) {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const sourceRef = useRef<HTMLDivElement>(null);
-    const currentRef = useRef<HTMLSpanElement>(null);
 
     useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
 
     const typedWords = typed.split(' ');
     const currentIndex = typedWords.length - 1;
 
-    // Keep the current word visible in the source pane.
+    // Keep the current line in the upper part of the source pane. Scroll in whole
+    // lines, leaving the previous line visible, so no line is cut off at the top.
     useEffect(() => {
-        const word = currentRef.current;
         const pane = sourceRef.current;
-        if (!word || !pane) return;
-        const top = word.offsetTop - pane.offsetTop;
-        if (top < pane.scrollTop || top > pane.scrollTop + pane.clientHeight - word.offsetHeight * 2) {
-            pane.scrollTo({ top: Math.max(0, top - pane.clientHeight / 3), behavior: 'smooth' });
+        const word = pane?.firstElementChild?.children[currentIndex] as HTMLElement | undefined;
+        if (!pane || !word) return;
+        const lineTop = word.offsetTop - parseFloat(getComputedStyle(pane).paddingTop);
+        const visibleTop = lineTop - pane.scrollTop;
+        if (visibleTop < 0 || visibleTop > pane.clientHeight / 2) {
+            // Previous line starts at the pane's top edge, so nothing above it peeks through the padding.
+            pane.scrollTo({ top: Math.max(0, word.offsetTop - word.offsetHeight), behavior: 'smooth' });
         }
     }, [currentIndex]);
 
     return (
         <div className="grid gap-4 md:grid-cols-2">
-            <div
-                ref={sourceRef}
-                className="card h-64 select-none overflow-y-auto p-5 font-mono text-[1.05rem] leading-8 md:h-80"
-                aria-label="Text to type"
-            >
-                {words.map((word, i) => {
-                    const typedWord = typedWords[i];
-                    let cls = 'text-subtle';
-                    if (i < currentIndex) {
-                        cls = typedWord === word ? 'text-success' : 'text-danger line-through decoration-danger/60';
-                    } else if (i === currentIndex) {
-                        cls =
-                            typedWord && !word.startsWith(typedWord)
-                                ? 'bg-danger/15 text-danger'
-                                : 'bg-accent/20 text-fg';
-                    }
-                    return (
-                        <React.Fragment key={i}>
-                            <span ref={i === currentIndex ? currentRef : undefined} className={`rounded px-0.5 ${cls}`}>
-                                {word}
-                            </span>{' '}
-                        </React.Fragment>
-                    );
-                })}
+            <div ref={sourceRef} className={`relative h-44 select-none overflow-y-auto sm:h-72 ${PANE}`} aria-label="Text to type">
+                <div className="flex flex-wrap">
+                    {words.map((word, i) => (
+                        <Word
+                            key={i}
+                            word={word}
+                            typed={i <= currentIndex ? typedWords[i] : undefined}
+                            state={i < currentIndex ? 'done' : i === currentIndex ? 'active' : 'pending'}
+                            highlight={i === currentIndex}
+                        />
+                    ))}
+                </div>
             </div>
             <textarea
                 ref={inputRef}
@@ -66,13 +64,13 @@ const ClassicView = forwardRef<TypingInputHandle, Props>(function ClassicView({ 
                 onDrop={(e) => e.preventDefault()}
                 disabled={disabled}
                 autoFocus
-                placeholder="Start typing here — the timer starts on your first keystroke"
+                placeholder="Start typing here…"
                 aria-label="Type the text shown"
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                className="input h-64 resize-none p-5 font-mono text-[1.05rem] leading-8 md:h-80"
+                className={`resize-none bg-transparent text-fg caret-caret placeholder:text-subtle focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 h-32 sm:h-72 ${PANE}`}
             />
         </div>
     );

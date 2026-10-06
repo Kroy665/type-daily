@@ -4,8 +4,10 @@ import TypingTest from '@/components/typing/TypingTest';
 import TypingGuide from '@/components/content/TypingGuide';
 import type { DurationValue } from '@/lib/constants';
 
-// Shared shell for the home page and the per-duration landing pages: a short
-// visible heading, the test itself, then guide content below the fold.
+// Shared shell for the home page and the per-duration landing pages: the test
+// first, then guide content below the fold. The page's H1 lives at the top of
+// the guide so it stays visible to readers and search engines without taking
+// space above the test.
 export default function TestPage({
     heading,
     subheading,
@@ -19,12 +21,8 @@ export default function TestPage({
 }) {
     return (
         <Layout>
-            <div className="mx-auto max-w-5xl px-4 pt-8 text-center sm:px-6 sm:pt-10">
-                <h1 className="text-sm font-medium text-fg">{heading}</h1>
-                <p className="mt-1 text-xs text-muted">{subheading}</p>
-            </div>
             <TypingTest key={duration ?? 'default'} duration={duration} />
-            <TypingGuide intro={intro} />
+            <TypingGuide heading={heading} subheading={subheading} intro={intro} />
         </Layout>
     );
 }

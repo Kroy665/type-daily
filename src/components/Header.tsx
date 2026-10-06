@@ -98,7 +98,7 @@ export default function Header() {
 
     return (
         <header className="sticky top-0 z-40 border-b border-border/70 bg-bg/80 backdrop-blur-md">
-            <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:gap-6 sm:px-6">
+            <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-6 sm:px-6">
                 <Logo />
                 <nav className="flex items-center gap-1" aria-label="Main">
                     {NAV.map(({ href, label, icon: NavIcon }) => {
