@@ -3,8 +3,11 @@ import { TYPING_TEXT, Word, type TypingInputHandle } from './WordsView';
 
 // Both panes share one look and size: the same text style as the inline view,
 // tall enough to read several lines ahead, scaled to the viewport.
-// On phones the typing box is shorter so both panes stay above the on-screen keyboard.
-const PANE = `rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 md:h-[clamp(20rem,calc(100vh-17rem),48rem)] ${TYPING_TEXT}`;
+// On wider screens the panes fill the viewport below the toolbar; the 13rem is
+// the header, toolbar, progress bar and buttons. On phones the typing box is
+// shorter so both panes stay above the on-screen keyboard. Scrollbars are
+// hidden; the panes still scroll (and follow the current word) as you type.
+const PANE = `no-scrollbar rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 md:h-[clamp(20rem,calc(100vh-13rem),56rem)] ${TYPING_TEXT}`;
 
 interface Props {
     words: string[];
@@ -24,14 +27,17 @@ const ClassicView = forwardRef<TypingInputHandle, Props>(function ClassicView({ 
     const typedWords = typed.split(' ');
     const currentIndex = typedWords.length - 1;
 
-    // Keep the current word visible in the source pane.
+    // Keep the current line in the upper part of the source pane. Scroll in whole
+    // lines, leaving the previous line visible, so no line is cut off at the top.
     useEffect(() => {
         const pane = sourceRef.current;
         const word = pane?.firstElementChild?.children[currentIndex] as HTMLElement | undefined;
         if (!pane || !word) return;
-        const top = word.offsetTop;
-        if (top < pane.scrollTop || top > pane.scrollTop + pane.clientHeight - word.offsetHeight * 2) {
-            pane.scrollTo({ top: Math.max(0, top - pane.clientHeight / 3), behavior: 'smooth' });
+        const lineTop = word.offsetTop - parseFloat(getComputedStyle(pane).paddingTop);
+        const visibleTop = lineTop - pane.scrollTop;
+        if (visibleTop < 0 || visibleTop > pane.clientHeight / 2) {
+            // Previous line starts at the pane's top edge, so nothing above it peeks through the padding.
+            pane.scrollTo({ top: Math.max(0, word.offsetTop - word.offsetHeight), behavior: 'smooth' });
         }
     }, [currentIndex]);
 

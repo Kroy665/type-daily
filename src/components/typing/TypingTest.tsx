@@ -133,7 +133,7 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     const finished = test.status === 'finished';
 
     return (
-        <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-10">
+        <div className="mx-auto w-full max-w-7xl px-4 pb-8 pt-4 sm:px-6">
             {/* Toolbar: timer, settings and live stats share one row on wide screens.
                 Settings fade out while typing (and collapse on phones) to keep focus on the text. */}
             <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-4">
@@ -228,7 +228,7 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                     )}
 
                     {/* Progress */}
-                    <div className="mt-6 h-0.5 overflow-hidden rounded-full bg-surface-2">
+                    <div className="mt-3 h-0.5 overflow-hidden rounded-full bg-surface-2">
                         <div
                             className="h-full bg-accent transition-[width] duration-200"
                             style={{ width: `${test.progress * 100}%` }}
@@ -236,7 +236,7 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                     </div>
 
                     {/* Visible buttons for mouse and touch users; the shortcut is shown on each. */}
-                    <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
+                    <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs">
                         <button type="button" onClick={test.restart} className="btn-ghost px-3 py-1.5 text-xs">
                             <RestartIcon width={14} height={14} /> Restart
                             <kbd className="kbd hidden sm:inline">esc</kbd>
@@ -245,10 +245,11 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                             <RefreshIcon width={14} height={14} /> New text
                             <kbd className="kbd hidden sm:inline">tab</kbd>
                         </button>
+                        {/* Same row as the buttons so it costs no extra height. */}
+                        <span className={`px-2 text-subtle ${test.status === 'ready' ? '' : 'invisible'}`}>
+                            The timer starts on your first keystroke.
+                        </span>
                     </div>
-                    {test.status === 'ready' && (
-                        <p className="mt-3 text-center text-xs text-subtle">The timer starts on your first keystroke.</p>
-                    )}
                 </section>
             )}
         </div>
@@ -266,7 +267,7 @@ export default function TypingTest({ duration }: { duration?: DurationValue }) {
     }, [duration]);
 
     if (!initial) {
-        return <div className="mx-auto min-h-[30rem] w-full max-w-6xl" />;
+        return <div className="mx-auto min-h-[30rem] w-full max-w-7xl" />;
     }
     return <TypingTestInner initial={initial} />;
 }

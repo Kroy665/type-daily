@@ -98,6 +98,16 @@
   }
 }
 
+@layer utilities {
+  /* Scrollable but without a visible scrollbar. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @keyframes caret-blink {
   0%, 45% { opacity: 1; }
   55%, 100% { opacity: 0; }
