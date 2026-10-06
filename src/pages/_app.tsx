@@ -14,8 +14,6 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>TypeDaily — typing practice</title>
-        <meta name="description" content="Practise typing every day. Track your speed, accuracy and streaks, and climb the leaderboard." />
       </Head>
       {/* Font variables on :root so fixed and portal content inherits them too */}
       <style jsx global>{`

@@ -130,7 +130,7 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     const live = test.liveScore;
 
     return (
-        <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
+        <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
             {/* Config */}
             <div
                 className={`mb-10 flex flex-wrap items-center justify-center gap-2 transition-opacity duration-300 sm:gap-3 ${
@@ -164,7 +164,7 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
             </div>
 
             {test.status === 'finished' && test.result ? (
-                <ResultsPanel result={test.result} onNext={test.nextText} onRestart={test.restart} />
+                <ResultsPanel result={test.result} duration={prefs.duration} onNext={test.nextText} onRestart={test.restart} />
             ) : (
                 <section aria-label="Typing test">
                     {/* Live stats */}
@@ -246,14 +246,18 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     );
 }
 
-export default function TypingTest() {
+export default function TypingTest({ duration }: { duration?: DurationValue }) {
     // Preferences live in localStorage, so wait for the client before loading a
     // text to avoid fetching one for the defaults and another for the saved prefs.
+    // A page-specific duration (the /typing-test/* pages) overrides the saved one.
     const [initial, setInitial] = useState<Prefs | null>(null);
-    useEffect(() => setInitial(readPrefs()), []);
+    useEffect(() => {
+        const saved = readPrefs();
+        setInitial(duration ? { ...saved, duration } : saved);
+    }, [duration]);
 
     if (!initial) {
-        return <div className="mx-auto min-h-[24rem] w-full max-w-5xl" />;
+        return <div className="mx-auto min-h-[26rem] w-full max-w-5xl" />;
     }
     return <TypingTestInner initial={initial} />;
 }

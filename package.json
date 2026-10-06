@@ -15,7 +15,8 @@
     "db:push": "prisma db push",
     "seed": "prisma db seed",
     "add-texts": "ts-node -O '{\"module\":\"CommonJS\"}' scripts/add-sample-texts.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "icons": "ts-node -O '{\"module\":\"CommonJS\",\"jsx\":\"react-jsx\"}' scripts/generate-icons.ts"
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",

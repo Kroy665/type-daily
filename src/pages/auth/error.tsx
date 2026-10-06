@@ -1,4 +1,4 @@
-import Head from 'next/head';
+import Seo from '@/components/Seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Logo from '@/components/Logo';
@@ -18,9 +18,7 @@ export default function AuthError() {
 
     return (
         <>
-            <Head>
-                <title>Sign-in error · TypeDaily</title>
-            </Head>
+            <Seo title="Sign-in error" noindex />
             <div className="grid min-h-screen place-items-center px-4">
                 <div className="w-full max-w-sm text-center">
                     <div className="mb-8 flex justify-center">

@@ -17,7 +17,7 @@ export interface UnlockedAchievement {
 }
 
 export type CompleteTestResponse =
-    | { saved: true; score: Score; unlocked: UnlockedAchievement[] }
+    | { saved: true; score: Score; resultId: string; unlocked: UnlockedAchievement[] }
     | { saved: false; score: Score };
 
 export interface ResultItem {

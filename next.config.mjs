@@ -10,6 +10,11 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Share-image routes read bundled fonts from disk at runtime.
+  outputFileTracingIncludes: {
+    '/api/og': ['./src/assets/fonts/**'],
+    '/api/og/**': ['./src/assets/fonts/**'],
+  },
   images: {
     remotePatterns: [
       // Google account avatars

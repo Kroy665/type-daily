@@ -12,6 +12,13 @@ export const DURATION_LABELS: Record<DurationValue, string> = {
     900: '15 min',
 };
 
+// URL slugs for the per-duration landing pages (/typing-test/<slug>).
+export const DURATION_SLUGS: Record<DurationValue, string> = {
+    60: '1-minute',
+    300: '5-minute',
+    900: '15-minute',
+};
+
 // Results above this are treated as automated input and are not saved.
 export const MAX_PLAUSIBLE_WPM = 300;
 

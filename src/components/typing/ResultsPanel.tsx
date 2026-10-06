@@ -2,6 +2,9 @@ import Link from 'next/link';
 import React from 'react';
 import type { FinalResult } from './useTypingTest';
 import { ArrowRightIcon, RefreshIcon } from '@/components/icons';
+import ShareButtons from '@/components/ShareButtons';
+import { DURATION_LABELS, DURATION_SLUGS, type DurationValue } from '@/lib/constants';
+import { absoluteUrl, SITE_NAME } from '@/lib/site';
 
 function Stat({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
     return (
@@ -36,15 +39,22 @@ function SaveStatus({ result }: { result: FinalResult }) {
 
 export default function ResultsPanel({
     result,
+    duration,
     onNext,
     onRestart,
 }: {
     result: FinalResult;
+    duration: DurationValue;
     onNext: () => void;
     onRestart: () => void;
 }) {
-    const { score, elapsedMs } = result;
+    const { score, elapsedMs, save } = result;
     const seconds = Math.round(elapsedMs / 1000);
+    // Saved results get their own card page; otherwise share the matching test page.
+    const shareUrl =
+        save.kind === 'saved' ? absoluteUrl(`/r/${save.resultId}`) : absoluteUrl(`/typing-test/${DURATION_SLUGS[duration]}`);
+    const shareText = `I just typed ${score.wpm} WPM at ${score.accuracy}% accuracy on the ${DURATION_LABELS[duration]} ${SITE_NAME} test. Can you beat it?`;
+    const canShare = score.wpm > 0 && save.kind !== 'saving';
 
     return (
         <section className="animate-fade-in-up" aria-live="polite">
@@ -69,6 +79,18 @@ export default function ResultsPanel({
                             <span className="font-medium text-fg">Unlocked: {a.name}</span>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {canShare && (
+                <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <span className="text-sm font-medium text-fg">Share your result</span>
+                    <ShareButtons url={shareUrl} text={shareText} />
+                    {save.kind === 'saved' && (
+                        <Link href={`/r/${save.resultId}`} className="text-sm text-accent-text underline-offset-4 hover:underline">
+                            View card
+                        </Link>
+                    )}
                 </div>
             )}
 

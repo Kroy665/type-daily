@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import Layout from '@/components/Layout';
+import Seo from '@/components/Seo';
 
 export default function NotFound() {
     return (
-        <Layout title="Not found">
+        <Layout>
+            <Seo title="Page not found" noindex />
             <div className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
                 <p className="font-mono text-6xl font-bold text-accent-text">404</p>
                 <h1 className="mt-4 text-xl font-semibold text-fg">This page doesn&apos;t exist</h1>
