@@ -64,10 +64,22 @@ const TIPS = [
     ['Practise a little every day', 'Ten minutes daily beats an hour once a week. That’s what the streak is for.'],
 ];
 
-export default function TypingGuide({ intro }: { intro?: React.ReactNode }) {
+export default function TypingGuide({
+    heading,
+    subheading,
+    intro,
+}: {
+    heading: string;
+    subheading?: string;
+    intro?: React.ReactNode;
+}) {
     return (
         <div className="border-t border-border/70 bg-surface/40">
             <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
+                <header className="mb-8 max-w-3xl">
+                    <h1 className="text-2xl font-semibold tracking-tight text-fg sm:text-3xl">{heading}</h1>
+                    {subheading && <p className="mt-2 text-base text-muted">{subheading}</p>}
+                </header>
                 {intro && <div className="prose-page mb-12 max-w-3xl">{intro}</div>}
 
                 <section aria-labelledby="tips-heading">

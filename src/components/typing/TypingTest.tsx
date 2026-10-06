@@ -4,7 +4,7 @@ import { useTypingTest, type TestConfig } from './useTypingTest';
 import WordsView, { type TypingInputHandle } from './WordsView';
 import ClassicView from './ClassicView';
 import ResultsPanel from './ResultsPanel';
-import { RefreshIcon } from '@/components/icons';
+import { RefreshIcon, RestartIcon } from '@/components/icons';
 
 type View = 'inline' | 'classic';
 
@@ -128,13 +128,15 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     }, [nextText, restart, status]);
 
     const live = test.liveScore;
+    // WPM over the first couple of seconds is mostly noise; hold it back until it settles.
+    const liveSettled = prefs.duration * 1000 - test.remainingMs >= 2000;
 
     return (
-        <div className={`mx-auto w-full px-4 pb-12 pt-6 sm:px-6 ${prefs.view === 'classic' ? 'max-w-7xl' : 'max-w-5xl'}`}>
+        <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-14">
             {/* Config */}
             <div
                 className={`mb-10 flex flex-wrap items-center justify-center gap-2 transition-opacity duration-300 sm:gap-3 ${
-                    running ? 'pointer-events-none opacity-0' : 'opacity-100'
+                    running ? 'pointer-events-none opacity-0 max-sm:hidden' : 'opacity-100'
                 }`}
             >
                 <Segmented
@@ -174,10 +176,10 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                         </div>
                         <div className={`flex gap-5 text-sm text-muted transition-opacity ${running ? 'opacity-100' : 'opacity-0'}`}>
                             <span>
-                                <span className="text-fg tabular-nums">{live?.wpm ?? 0}</span> wpm
+                                <span className="text-fg tabular-nums">{live && liveSettled ? live.wpm : '–'}</span> wpm
                             </span>
                             <span>
-                                <span className="text-fg tabular-nums">{live?.accuracy ?? 100}%</span> acc
+                                <span className="text-fg tabular-nums">{live && liveSettled ? `${live.accuracy}%` : '–'}</span> acc
                             </span>
                         </div>
                     </div>
@@ -223,23 +225,20 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                         />
                     </div>
 
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-subtle">
-                        <button
-                            type="button"
-                            onClick={test.nextText}
-                            className="btn-ghost px-3 py-1.5 text-xs"
-                            aria-label="New text"
-                        >
-                            <RefreshIcon width={14} height={14} /> New text
+                    {/* Visible buttons for mouse and touch users; the shortcut is shown on each. */}
+                    <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-xs">
+                        <button type="button" onClick={test.restart} className="btn-ghost px-3 py-1.5 text-xs">
+                            <RestartIcon width={14} height={14} /> Restart
+                            <kbd className="kbd hidden sm:inline">esc</kbd>
                         </button>
-                        <span className="hidden sm:inline">
-                            <kbd className="kbd">tab</kbd> new text
-                        </span>
-                        <span className="hidden sm:inline">
-                            <kbd className="kbd">esc</kbd> restart
-                        </span>
-                        <span>timer starts on your first keystroke</span>
+                        <button type="button" onClick={test.nextText} className="btn-ghost px-3 py-1.5 text-xs">
+                            <RefreshIcon width={14} height={14} /> New text
+                            <kbd className="kbd hidden sm:inline">tab</kbd>
+                        </button>
                     </div>
+                    {test.status === 'ready' && (
+                        <p className="mt-3 text-center text-xs text-subtle">The timer starts on your first keystroke.</p>
+                    )}
                 </section>
             )}
         </div>
@@ -257,7 +256,7 @@ export default function TypingTest({ duration }: { duration?: DurationValue }) {
     }, [duration]);
 
     if (!initial) {
-        return <div className="mx-auto min-h-[26rem] w-full max-w-5xl" />;
+        return <div className="mx-auto min-h-[30rem] w-full max-w-6xl" />;
     }
     return <TypingTestInner initial={initial} />;
 }

@@ -3,14 +3,31 @@ import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, u
 // Visible lines of text; the current line is kept second once you're past the first.
 const VISIBLE_LINES = 3;
 
+// Typography shared by both views so Inline and Classic read the same.
+export const TYPING_TEXT = 'font-mono text-[1.35rem] leading-[2.4]';
+
 type WordState = 'pending' | 'active' | 'done';
 
-const Word = memo(function Word({ word, typed, state }: { word: string; typed: string | undefined; state: WordState }) {
+// One word with per-letter feedback. Used by both the inline and classic views.
+export const Word = memo(function Word({
+    word,
+    typed,
+    state,
+    highlight = false,
+}: {
+    word: string;
+    typed: string | undefined;
+    state: WordState;
+    /** Mark the current word (the classic view has no caret in its source pane). */
+    highlight?: boolean;
+}) {
     const wrong = state === 'done' && typed !== word;
     const extra = typed && typed.length > word.length ? typed.slice(word.length) : '';
     return (
         <span
-            className={`relative mr-[0.6em] inline-block whitespace-nowrap ${wrong ? 'underline decoration-danger/70 decoration-2 underline-offset-[6px]' : ''}`}
+            className={`relative mr-[0.6em] inline-block whitespace-nowrap rounded-sm ${
+                wrong ? 'underline decoration-danger/70 decoration-2 underline-offset-[6px]' : ''
+            } ${highlight ? 'underline decoration-accent decoration-2 underline-offset-[6px]' : ''}`}
         >
             {word.split('').map((char, i) => {
                 const typedChar = typed?.[i];
@@ -133,7 +150,7 @@ const WordsView = forwardRef<TypingInputHandle, Props>(function WordsView({ word
                 className="absolute inset-0 z-10 h-full w-full cursor-default opacity-0"
             />
             <div
-                className={`overflow-hidden font-mono text-[1.35rem] leading-[2.4] transition-[filter,opacity] duration-200 sm:text-[1.6rem] ${
+                className={`overflow-hidden ${TYPING_TEXT} transition-[filter,opacity] duration-200 sm:text-[1.6rem] ${
                     !focused && !disabled ? 'opacity-40 blur-[3px]' : ''
                 }`}
                 style={{ height: `${VISIBLE_LINES * 2.4}em` }}
