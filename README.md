@@ -25,144 +25,159 @@ survive across days, not just across a session.
 A few decisions here came from things that broke in earlier iterations, not
 from a spec:
 
-- **Achievement unlocking races on itself.** Two results submitted close
-  together for the same user can both decide "this unlocks Speed Demon."
-  Rather than lock around it, `updateUserStats` relies on the
-  `@@unique([userId, achievementId])` constraint in the schema and just lets
-  the duplicate insert fail — caught and ignored. Simpler than a
-  transaction, and correct for the same reason a unique index usually is.
-- **Streak math is calendar-day math, not "24 hours since last test."**
-  `updateUserStats` buckets `lastTestDate` down to a local calendar day and
-  diffs day-numbers, so two tests an hour apart just before and after
-  midnight count as two different days. The tradeoff (documented, not
-  hidden): this runs on server time, so a user in a different timezone can
-  see their streak flip at a time that doesn't match their own midnight.
+- **The server scores every test; the client never submits a score.** Early
+  versions had the browser POST `{ wpm, accuracy }` and the server trusted
+  it, so anyone could put `wpm: 500` on the leaderboard. Now
+  `POST /api/tests/start` issues a single-use `TestSession`, the first
+  keystroke stamps `startedAt` on the server, and
+  `POST /api/tests/:id/complete` receives only the typed text. The server
+  scores it against the stored passage using its own clock, rejects
+  completions that arrive after the time limit or exceed
+  `MAX_PLAUSIBLE_WPM`, and refuses to complete a session twice. A bot that
+  types at a believable speed in real time is still possible — that needs
+  keystroke analysis — but submitting a made-up number is not.
+- **One scoring function, shared by client and server.** `src/lib/scoring.ts`
+  computes the live stats while you type *and* the authoritative result, so
+  the number on screen is the number that's saved. Scoring is word-aligned:
+  one slipped character marks one word wrong, not every character after it.
+  WPM is the standard correct-characters ÷ 5 per minute.
+- **Stats updates are transactional.** Recording a result, updating
+  `bestWpm`/streaks/`totalTests` and unlocking achievements happen in one
+  transaction with the user row locked (`SELECT … FOR UPDATE`), so two
+  completions landing together can't lose an increment.
+- **Streaks count the user's calendar days, not the server's.** The client
+  sends its IANA timezone with each completion; `src/lib/streak.ts` buckets
+  dates in that zone, so a test at 11:30pm and another at 8am count as
+  consecutive days wherever you live.
+- **Achievements unlock every tier you reach.** Hitting 100 WPM on your first
+  run unlocks the 50 and 75 WPM badges too (an earlier `else if` chain
+  skipped them forever).
 - **Daily Challenges existed and were removed.** An earlier version shipped
-  a full daily-challenge system (`DailyChallenge` / `DailyChallengeResult`
-  models, a `/challenge` page, its own leaderboard). It was cut in a later
-  commit — the schema below is what's actually live today, not what an old
-  features doc still describes.
-- **There's a `.old` component sitting next to its replacement.**
-  `TypingSpeed.old.tsx` (296 lines) is kept alongside `TypingSpeed.tsx` (372
-  lines) rather than deleted — a checkpoint from mid-rewrite, left in place
-  instead of trusting git history alone for a component this central.
+  a full daily-challenge system. It was cut in a later commit; some of the
+  older docs in the repo root (`NEW_FEATURES.md`, `MIGRATION_GUIDE.md`, …)
+  still describe it.
 
-### What's *not* production-grade here
+### Known limitations
 
-- The GitHub Actions workflow in `.github/workflows/` is the stock,
-  unmodified "deploy to GitHub Pages" template scaffolded by
-  `create-next-app`. It builds a **static export**, which cannot work for
-  this app — there's a database, server-side auth, and API routes involved.
-  It has never run for real; the live site is deployed separately (Vercel).
-  Kept as-is here rather than deleted quietly, so the gap is visible instead
-  of papered over.
-- Admin access (`requireAdmin` in `src/lib/middleware/adminOnly.ts`) checks
-  a comma-separated `ADMIN_EMAILS` env var, not the `Role` enum already
-  defined on the `User` model. The DB has the right shape for role-based
-  admin; the code hasn't caught up to it yet.
-- Streak/timezone edge cases and first-load leaderboard performance at scale
-  are known, undocumented-elsewhere gaps — noted honestly rather than
-  glossed over.
+- There's no rate limiting on the API. On Vercel, add a WAF rate-limit rule
+  for `/api/tests/*` rather than an in-memory limiter (instances don't share
+  memory).
+- No Content-Security-Policy header yet — the other security headers are set
+  in `next.config.mjs`.
+- The schema is managed with `prisma db push`; there's no migration history
+  in the repo.
+- Profile "time typed" sums each test's selected duration, so a test you
+  finish early still counts its full duration.
 
 ## What it does
 
 ### Typing test
-- Configurable difficulty (`EASY` / `MEDIUM` / `HARD`) and duration, texts
-  pulled at random from a `Text` pool seeded per difficulty/time bucket
-  (`GET /api/text/get-random`)
-- Live WPM and accuracy computed client-side as you type
-  (`TypingSpeed.tsx`), with a word-level diff view showing exactly which
-  words were wrong (`TypingDiff.tsx`)
-- Results are Zod-validated server-side before they touch the database
-  (`createResultSchema` — WPM capped at 500 with a comment noting the actual
-  world record is ~200, so a client bug can't quietly write nonsense scores)
+- Difficulty (`EASY` / `MEDIUM` / `HARD`) and duration (1, 5 or 15 min), with
+  texts drawn at random from a `Text` pool per difficulty/duration
+- **Inline view**: Monkeytype-style passage with per-character coloring,
+  extra characters shown in place, a smooth caret, and three-line scrolling
+- **Classic view**: source text beside a text box, with word-level feedback
+- Timer starts on the first keystroke; the test ends when time runs out or
+  the passage is typed. Paste and drop are blocked.
+- `Tab` loads a new text and `Esc` restarts the same one (only while the
+  typing box has focus, so the rest of the page stays keyboard-navigable)
+- Works signed out; signing in saves results
 
 ### Accounts and stats
-- Google OAuth via NextAuth (JWT sessions, Prisma adapter) — no
-  password/local-account path at all
-- Every submitted result updates `bestWpm`, `bestAccuracy`, `totalTests`,
-  and a streak pair (`currentStreak` / `longestStreak`) in one pass
-  (`updateUserStats`)
-- 10 achievements (`AchievementType` enum: speed thresholds, accuracy
-  thresholds, streak milestones, total-test milestones, first test) checked
-  and unlocked automatically after each result, deduplicated by the DB
-  constraint rather than an in-app check
+- Google OAuth via NextAuth (JWT sessions, Prisma adapter)
+- Profile with best/average speed and accuracy, streaks, a WPM/accuracy chart
+  of the last 30 tests, achievements, and recent tests
+- 10 achievements, unlocked automatically and shown on the results screen
 
 ### Leaderboard
-- Global ranking by best WPM, best accuracy, current streak, or total tests
-  (`GET /api/leaderboard/global`), plus a dedicated endpoint for "where do I
-  rank" without pulling the full top-100 (`GET /api/leaderboard/user-rank`)
+- Public ranking by best WPM, best accuracy, current streak, or total tests,
+  with stable tie-breaking (earliest account first)
+- Signed-in users see their own rank for the selected metric
 
 ### Admin
-- `/text` — create and delete practice texts by difficulty and duration,
-  gated behind `requireAdmin` (email-allowlist based, see limitation above)
+- `/text` — add and delete texts, with a coverage grid that flags any
+  difficulty/duration combination with no texts. Admins are users with
+  `role = ADMIN` or an email in `ADMIN_EMAILS` (comma-separated,
+  case-insensitive). The API re-checks against the database on every
+  request.
 
 ## Architecture
 
 ```
 src/
   pages/
-    index.tsx                    landing / typing test entry point
-    text/index.tsx                admin: create/delete practice texts
-    leaderboard/index.tsx         global rankings
-    profile/index.tsx             personal stats + achievements
-    auth/login.tsx, logout.tsx    NextAuth-backed auth pages
+    index.tsx                       typing test
+    leaderboard/index.tsx           public rankings
+    profile/index.tsx               personal stats, chart, achievements
+    text/index.tsx                  admin: manage texts
+    auth/{login,error,logout}.tsx   sign-in pages
+    404.tsx
     api/
-      results/create.tsx          validate + persist a result, trigger stat/achievement update
-      results/get-all.tsx         fetch results
-      leaderboard/global.ts       ranked leaderboard query
-      leaderboard/user-rank.ts    single-user rank lookup
-      text/{create,delete,get-all,get-random}.ts   admin text management
-      achievements/user.ts        a user's unlocked achievements
-      auth/[...nextauth].ts       NextAuth route handler
+      tests/start.ts                draw a text; create a TestSession for signed-in users
+      tests/[id]/begin.ts           stamp the server-side start time
+      tests/[id]/complete.ts        score on the server, record result + stats + achievements
+      results/get-all.ts            the user's results
+      leaderboard/{global,user-rank}.ts
+      text/{create,delete,get-all}.ts   admin text management
+      achievements/user.ts
+      auth/[...nextauth].ts
   components/
-    TypingTest.tsx                 test container/orchestration
-    TypingSpeed.tsx                current WPM/accuracy engine (+ TypingSpeed.old.tsx, kept from the prior rewrite)
-    TypingDiff.tsx                 word-level right/wrong diff rendering
-    Header.tsx, HeroSection.tsx, Layout.tsx   shell/layout
+    typing/
+      useTypingTest.ts              test state machine (load → ready → running → finished)
+      TypingTest.tsx                config bar, live stats, shortcuts
+      WordsView.tsx, ClassicView.tsx, ResultsPanel.tsx
+    Header.tsx, Layout.tsx, Logo.tsx, Avatar.tsx, icons.tsx, ErrorBoundary.tsx
   lib/
-    authOptions.ts                 NextAuth config (Google provider, JWT sessions, Prisma adapter)
-    db.ts                          Prisma client
-    middleware/adminOnly.ts        session + email-allowlist admin gate
-    utils/updateUserStats.ts       stats + streak + achievement-unlock logic
-    validations.ts                 Zod schemas for every mutating API route
-  context/ThemeContext.tsx          dark/light theme
-  store/index.ts                    Zustand client state
+    scoring.ts                      shared scoring (client + server)
+    streak.ts                       timezone-aware streak math
+    constants.ts                    difficulties, durations, limits
+    validations.ts                  Zod schemas for API input
+    client.ts                       typed fetch client for the API
+    server/
+      api.ts                        route wrapper: method check, Zod → 400, errors → 500
+      auth.ts                       session helpers, admin guard
+      results.ts                    transactional result recording + achievements
+      leaderboard.ts                shared select/ordering
+    authOptions.ts, admin.ts, db.ts
+  styles/globals.css                color tokens (light + dark) and component classes
 prisma/
-  schema.prisma                    User/Result/Text/Achievement/UserAchievement models
-  seed.ts                          seeds the 10 achievement rows
-scripts/add-sample-texts.ts        bulk-loads practice texts
+  schema.prisma
+  seed.ts                           seeds the 10 achievements
+scripts/add-sample-texts.ts         bulk-loads practice texts
 ```
 
 ## Stack
 
 Next.js 15 (Pages Router), TypeScript, Prisma 5 + PostgreSQL, NextAuth 4
-(Google OAuth, JWT strategy), Zod for input validation, Zustand for client
-state, Tailwind CSS, Chart.js for stats visualization.
+(Google OAuth, JWT strategy), Zod, Tailwind CSS with CSS-variable color
+tokens, Chart.js, Vitest, ESLint.
 
 ## Setup
 
 ```bash
-npm install
+npm install          # also runs `prisma generate`
 
 # copy and fill in .env.example — Postgres connection string, NEXTAUTH_SECRET
 # (openssl rand -base64 32), Google OAuth client ID/secret, ADMIN_EMAILS
 cp .env.example .env
 
-npx prisma generate
-npx prisma migrate deploy   # or `migrate dev` for a fresh local DB
-
-npm run seed          # seeds the 10 achievements
-npm run add-texts     # optional: bulk-load sample practice texts
+npm run db:push      # create/update tables from prisma/schema.prisma
+npm run seed         # seeds the 10 achievements
+npm run add-texts    # optional: bulk-load sample practice texts
 
 npm run dev
 ```
 
-`npm run build` runs `next build && prisma generate` — the Prisma client
-regenerates as part of every production build, not just local setup.
+### Scripts
 
-## History
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | `prisma generate && next build` |
+| `npm run lint` | ESLint (`next/core-web-vitals`, `next/typescript`) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest unit tests for scoring, streaks and achievements |
+| `npm run db:push` | Sync the database schema |
 
-16 commits, including a real security pass ("Security: Update dependencies
-and fix vulnerabilities") and a feature actually being cut in production
-("Remove Daily Challenge feature") rather than just left half-built.
+CI (`.github/workflows/ci.yml`) runs lint, type-check, tests and a production
+build on every push and pull request. Deployment is handled by Vercel.

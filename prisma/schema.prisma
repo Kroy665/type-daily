@@ -77,6 +77,7 @@ model User {
 
   results            Result[]
   achievements       UserAchievement[]
+  testSessions       TestSession[]
 
   @@index([name])
   @@index([email])
@@ -119,7 +120,29 @@ model Text {
   created    DateTime   @default(now())
   updated    DateTime   @default(now()) @updatedAt
 
+  testSessions TestSession[]
+
   @@index(created)
+  @@index([difficulty, time])
+}
+
+// A server-issued, single-use test. Results are scored on the server from the
+// typed input and server-side timing, so clients can't submit arbitrary scores.
+model TestSession {
+  id           String     @id @default(cuid())
+  userId       String
+  textId       String
+  difficulty   Difficulty
+  selectedTime Int
+  created      DateTime   @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text Text @relation(fields: [textId], references: [id], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([created])
 }
 
 enum AchievementType {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
 
@@ -11,43 +11,27 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light');
-    const [mounted, setMounted] = useState(false);
 
-    // Load theme from localStorage on mount
+    // The inline script in _document has already applied the theme class;
+    // read it back so state matches what's on screen.
     useEffect(() => {
-        setMounted(true);
-        const savedTheme = localStorage.getItem('theme') as Theme;
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme) {
-            setTheme(savedTheme);
-        } else if (prefersDark) {
-            setTheme('dark');
-        }
+        setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
     }, []);
 
-    // Update document class and localStorage when theme changes
-    useEffect(() => {
-        if (mounted) {
-            const root = document.documentElement;
-            if (theme === 'dark') {
-                root.classList.add('dark');
-            } else {
-                root.classList.remove('dark');
+    const toggleTheme = useCallback(() => {
+        setTheme((prev) => {
+            const next = prev === 'dark' ? 'light' : 'dark';
+            document.documentElement.classList.toggle('dark', next === 'dark');
+            try {
+                localStorage.setItem('theme', next);
+            } catch {
+                // Storage can be unavailable (private mode); the theme still applies for this visit.
             }
-            localStorage.setItem('theme', theme);
-        }
-    }, [theme, mounted]);
+            return next;
+        });
+    }, []);
 
-    const toggleTheme = () => {
-        setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-    };
-
-    return (
-        <ThemeContext.Provider value={{ theme, toggleTheme }}>
-            {children}
-        </ThemeContext.Provider>
-    );
+    return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

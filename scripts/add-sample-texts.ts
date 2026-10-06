@@ -378,7 +378,7 @@ async function main() {
 
     for (const textData of sampleTexts) {
         try {
-            const text = await prisma.text.create({
+            await prisma.text.create({
                 data: textData
             })
             console.log(`✅ Added ${textData.difficulty} text (${textData.time}s) - ${textData.text.substring(0, 50)}...`)
