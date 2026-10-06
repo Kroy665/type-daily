@@ -1,29 +1,16 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/db'
-import authOptions from '@/lib/authOptions'
-import { User, Result, Text } from '@prisma/client'
-export default async function GET(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method !== 'GET') {
-        return res.status(405).json({ message: 'Method not allowed' })
+import { apiRoute } from '@/lib/server/api'
+import { requireAdmin } from '@/lib/server/auth'
+
+export default apiRoute(['GET'], async (req, res) => {
+    const admin = await requireAdmin(req, res)
+    if (!admin.ok) {
+        return res.status(admin.status).json({ message: admin.message })
     }
 
-    const session = await getServerSession(req, res, authOptions)
-    if (!session || !session.user) {
-        return res.status(401).json({ message: 'Unauthorized' })
-    }
-
-    const user = await prisma.user.findUnique({
-        where: {
-            id: session.user.id
-        }
+    const texts = await prisma.text.findMany({
+        orderBy: [{ difficulty: 'asc' }, { time: 'asc' }, { created: 'desc' }],
     })
 
-    if (!user) {
-        return res.status(404).json({ message: 'User not found' })
-    }
-
-    const texts = await prisma.text.findMany()
-
     return res.status(200).json(texts)
-}
+})

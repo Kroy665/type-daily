@@ -1,51 +1,19 @@
-import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '@/lib/db'
-import { deleteTextSchema } from '@/lib/validations'
-import { ZodError } from 'zod'
-import { requireAdmin } from '@/lib/middleware/adminOnly'
+import { apiRoute } from '@/lib/server/api'
+import { requireAdmin } from '@/lib/server/auth'
+import { idSchema } from '@/lib/validations'
 
-export default async function DELETE(req: NextApiRequest, res: NextApiResponse) {
-    try {
-        if (req.method !== 'DELETE') {
-            return res.status(405).json({ message: 'Method not allowed' })
-        }
-
-        // Check if user is admin
-        const { authorized, error } = await requireAdmin(req, res)
-        if (!authorized) {
-            return res.status(error === 'Unauthorized' ? 401 : 403).json({ message: error })
-        }
-
-        // Validate query parameters
-        const { id } = deleteTextSchema.parse(req.query)
-
-        const thisText = await prisma.text.findUnique({
-            where: {
-                id
-            },
-        });
-
-        if (!thisText) {
-            return res.status(404).json({ message: 'Text not found' })
-        }
-
-        await prisma.text.delete({
-            where: {
-                id: thisText.id
-            }
-        })
-
-        return res.status(200).json({ message: 'Text deleted successfully', data: thisText })
-
-    } catch (error) {
-        if (error instanceof ZodError) {
-            return res.status(400).json({
-                message: 'Validation error',
-                errors: error.issues
-            })
-        }
-
-        console.error('Error deleting text:', error)
-        return res.status(500).json({ message: 'Internal server error' })
+export default apiRoute(['DELETE'], async (req, res) => {
+    const admin = await requireAdmin(req, res)
+    if (!admin.ok) {
+        return res.status(admin.status).json({ message: admin.message })
     }
-}
+
+    const { id } = idSchema.parse(req.query)
+    const { count } = await prisma.text.deleteMany({ where: { id } })
+
+    if (count === 0) {
+        return res.status(404).json({ message: 'Text not found' })
+    }
+    return res.status(200).json({ message: 'Text deleted', id })
+})

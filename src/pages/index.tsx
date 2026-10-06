@@ -1,31 +1,16 @@
-import Image from "next/image";
-import { Inter } from "next/font/google";
-import TypingTest from "../components/TypingTest";
-import texts from "@/static/texts";
-import Header from "@/components/Header";
-import { getSession } from "next-auth/react";
-import { GetServerSidePropsContext } from "next";
-import { sessionType } from "@/types/sessionType";
+import type { GetServerSidePropsContext } from "next";
 import Layout from "@/components/Layout";
+import TypingTest from "@/components/typing/TypingTest";
+import { getPageSession } from "@/lib/server/auth";
 
-const inter = Inter({ subsets: ["latin"] });
-
-export default function Home({
-  session,
-}: {
-  session: sessionType;
-}) {
+export default function Home() {
   return (
-    <Layout session={session}>
-        <TypingTest />
+    <Layout>
+      <TypingTest />
     </Layout>
   );
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const session = await getSession(context);
-  return {
-    props: { session },
-  };
+  return { props: { session: await getPageSession(context) } };
 }
-

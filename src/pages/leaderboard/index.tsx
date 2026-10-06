@@ -1,186 +1,178 @@
-import React, { useEffect, useState } from 'react'
-import { getSession } from "next-auth/react";
-import { GetServerSidePropsContext } from "next";
-import { sessionType } from "@/types/sessionType";
-import Layout from '@/components/Layout';
-import { useStore, LeaderboardUser } from '@/store';
-import Image from 'next/image';
+import type { GetServerSidePropsContext } from 'next';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import Layout, { PageHeader } from '@/components/Layout';
+import Avatar from '@/components/Avatar';
+import { FlameIcon } from '@/components/icons';
+import { api, errorMessage } from '@/lib/client';
+import type { LeaderboardMetric } from '@/lib/constants';
+import { getPageSession } from '@/lib/server/auth';
+import type { LeaderboardUser } from '@/types/api';
 
-function Leaderboard({
-    session
-}: {
-    session: sessionType;
-}) {
-    const { getLeaderboard, getUserRank } = useStore();
-    const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
-    const [userRank, setUserRank] = useState<LeaderboardUser | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [orderBy, setOrderBy] = useState('bestWpm');
+const METRICS: { value: LeaderboardMetric; label: string; format: (u: LeaderboardUser) => string }[] = [
+    { value: 'bestWpm', label: 'Speed', format: (u) => `${u.bestWpm} wpm` },
+    { value: 'bestAccuracy', label: 'Accuracy', format: (u) => `${u.bestAccuracy}%` },
+    { value: 'currentStreak', label: 'Streak', format: (u) => `${u.currentStreak} ${u.currentStreak === 1 ? 'day' : 'days'}` },
+    { value: 'totalTests', label: 'Tests', format: (u) => `${u.totalTests}` },
+];
+
+const MEDALS = ['🥇', '🥈', '🥉'];
+
+function RankCell({ rank }: { rank: number | null }) {
+    if (rank !== null && rank <= 3) {
+        return <span className="text-lg" aria-label={`Rank ${rank}`}>{MEDALS[rank - 1]}</span>;
+    }
+    return <span className="font-mono text-sm text-muted">{rank ?? '—'}</span>;
+}
+
+export default function Leaderboard() {
+    const { data: session } = useSession();
+    const [metric, setMetric] = useState<LeaderboardMetric>('bestWpm');
+    const [rows, setRows] = useState<LeaderboardUser[] | null>(null);
+    const [me, setMe] = useState<LeaderboardUser | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const signedIn = Boolean(session?.user);
+    const current = METRICS.find((m) => m.value === metric)!;
 
     useEffect(() => {
-        fetchLeaderboard();
-    }, [orderBy]);
-
-    const fetchLeaderboard = async () => {
-        try {
-            setIsLoading(true);
-            const [leaderboardData, userRankData] = await Promise.all([
-                getLeaderboard(orderBy, 100),
-                getUserRank()
-            ]);
-            setLeaderboard(leaderboardData);
-            setUserRank(userRankData);
-        } catch (error) {
-            console.error('Error fetching leaderboard:', error);
-        } finally {
-            setIsLoading(false);
+        let cancelled = false;
+        setRows(null);
+        setError(null);
+        api.leaderboard(metric)
+            .then((data) => !cancelled && setRows(data))
+            .catch((err) => !cancelled && setError(errorMessage(err, 'Could not load the leaderboard.')));
+        if (signedIn) {
+            api.userRank(metric)
+                .then((data) => !cancelled && setMe(data))
+                .catch(() => !cancelled && setMe(null));
         }
-    };
-
-    const getRankBadge = (rank: number) => {
-        if (rank === 1) return '🥇';
-        if (rank === 2) return '🥈';
-        if (rank === 3) return '🥉';
-        return null;
-    };
+        return () => {
+            cancelled = true;
+        };
+    }, [metric, signedIn]);
 
     return (
-        <Layout session={session}>
-            <div className="max-w-6xl mx-auto px-5 py-6">
-                <h1 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-white">Leaderboard</h1>
+        <Layout title="Leaderboard">
+            <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
+                <PageHeader
+                    title="Leaderboard"
+                    description="Top typists by personal best. Ties go to whoever got there first."
+                    actions={
+                        <div role="tablist" aria-label="Rank by" className="flex gap-0.5 rounded-lg bg-surface-2 p-0.5">
+                            {METRICS.map((m) => (
+                                <button
+                                    key={m.value}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={metric === m.value}
+                                    onClick={() => setMetric(m.value)}
+                                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                                        metric === m.value ? 'bg-surface text-fg shadow-sm' : 'text-muted hover:text-fg'
+                                    }`}
+                                >
+                                    {m.label}
+                                </button>
+                            ))}
+                        </div>
+                    }
+                />
 
-                {/* User's Rank Card */}
-                {userRank && (
-                    <div className="bg-blue-600 dark:bg-blue-700 text-white rounded border border-blue-700 dark:border-blue-600 p-4 mb-6">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="text-3xl font-bold">#{userRank.rank}</div>
-                                <div>
-                                    <p className="text-xs opacity-80">Your Rank</p>
-                                    <p className="text-lg font-semibold">{userRank.name}</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <p className="text-xs opacity-80">Best WPM</p>
-                                <p className="text-2xl font-bold">{userRank.bestWpm}</p>
-                                <p className="text-xs opacity-80 mt-1">Accuracy: {userRank.bestAccuracy}%</p>
+                {me && (
+                    <div className="card mb-6 flex flex-wrap items-center gap-x-8 gap-y-4 border-accent/40 bg-accent/5 px-5 py-4">
+                        <div className="flex items-center gap-3">
+                            <Avatar name={me.name} image={me.image} size={40} />
+                            <div>
+                                <p className="text-xs text-muted">Your rank</p>
+                                <p className="font-mono text-2xl font-semibold text-accent-text">
+                                    {me.rank ? `#${me.rank}` : '—'}
+                                </p>
                             </div>
                         </div>
-                        <div className="mt-3 grid grid-cols-3 gap-4 text-center border-t border-blue-500 pt-3">
-                            <div>
-                                <p className="text-xs opacity-80">Total Tests</p>
-                                <p className="text-base font-semibold">{userRank.totalTests}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs opacity-80">Current Streak</p>
-                                <p className="text-base font-semibold">{userRank.currentStreak}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs opacity-80">Longest Streak</p>
-                                <p className="text-base font-semibold">{userRank.longestStreak}</p>
-                            </div>
-                        </div>
+                        {me.rank ? (
+                            <dl className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
+                                {METRICS.map((m) => (
+                                    <div key={m.value}>
+                                        <dt className="text-xs text-muted">{m.label}</dt>
+                                        <dd className="font-mono text-fg">{m.format(me)}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        ) : (
+                            <p className="text-sm text-muted">
+                                <Link href="/" className="font-medium text-accent-text hover:underline">
+                                    Finish a test
+                                </Link>{' '}
+                                to get on the board.
+                            </p>
+                        )}
                     </div>
                 )}
 
-                {/* Sort Options */}
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3 mb-4">
-                    <p className="text-xs font-medium mb-2 text-gray-600 dark:text-gray-400">Sort by:</p>
-                    <div className="flex gap-2 flex-wrap">
-                        <button
-                            onClick={() => setOrderBy('bestWpm')}
-                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'bestWpm' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                        >
-                            Best WPM
-                        </button>
-                        <button
-                            onClick={() => setOrderBy('bestAccuracy')}
-                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'bestAccuracy' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                        >
-                            Best Accuracy
-                        </button>
-                        <button
-                            onClick={() => setOrderBy('currentStreak')}
-                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'currentStreak' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                        >
-                            Current Streak
-                        </button>
-                        <button
-                            onClick={() => setOrderBy('totalTests')}
-                            className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${orderBy === 'totalTests' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                        >
-                            Total Tests
-                        </button>
-                    </div>
-                </div>
-
-                {/* Leaderboard Table */}
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="card overflow-hidden">
+                    {error ? (
+                        <p className="px-6 py-12 text-center text-sm text-danger">{error}</p>
+                    ) : !rows ? (
+                        <div className="divide-y divide-border">
+                            {Array.from({ length: 6 }, (_, i) => (
+                                <div key={i} className="flex items-center gap-4 px-5 py-4">
+                                    <div className="h-8 w-8 animate-pulse rounded-full bg-surface-2" />
+                                    <div className="h-4 w-40 animate-pulse rounded bg-surface-2" />
+                                </div>
+                            ))}
                         </div>
+                    ) : rows.length === 0 ? (
+                        <p className="px-6 py-12 text-center text-sm text-muted">
+                            No one on the board yet.{' '}
+                            <Link href="/" className="font-medium text-accent-text hover:underline">
+                                Be the first.
+                            </Link>
+                        </p>
                     ) : (
                         <table className="w-full text-sm">
-                            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                            <thead className="border-b border-border text-left text-xs uppercase tracking-wider text-subtle">
                                 <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Rank</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Player</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">WPM</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Accuracy</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Tests</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-400">Streak</th>
+                                    <th scope="col" className="w-16 px-5 py-3 font-medium">#</th>
+                                    <th scope="col" className="px-2 py-3 font-medium">Typist</th>
+                                    <th scope="col" className="px-5 py-3 text-right font-medium">{current.label}</th>
+                                    <th scope="col" className="hidden px-5 py-3 text-right font-medium sm:table-cell">
+                                        {metric === 'bestWpm' ? 'Accuracy' : 'Speed'}
+                                    </th>
+                                    <th scope="col" className="hidden px-5 py-3 text-right font-medium md:table-cell">Tests</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {leaderboard.map((user) => (
-                                    <tr
-                                        key={user.id}
-                                        className={`${user.id === session?.user?.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'} transition-colors`}
-                                    >
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <div className="flex items-center gap-1.5">
-                                                {getRankBadge(user.rank) && <span className="text-lg">{getRankBadge(user.rank)}</span>}
-                                                <span className="text-sm font-semibold text-gray-900 dark:text-gray-200">#{user.rank}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                {user.image ? (
-                                                    <div className="relative w-7 h-7 rounded-full overflow-hidden">
-                                                        <Image
-                                                            src={user.image}
-                                                            alt={user.name || 'User'}
-                                                            fill
-                                                            className="object-cover"
-                                                            sizes="28px"
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="w-7 h-7 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-gray-200">
-                                                        {user.name?.charAt(0) || '?'}
-                                                    </div>
-                                                )}
-                                                <span className="text-sm font-medium text-gray-900 dark:text-gray-200">{user.name || 'Anonymous'}</span>
-                                                {user.id === session?.user?.id && (
-                                                    <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">You</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">{user.bestWpm}</span>
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">{user.bestAccuracy}%</span>
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">{user.totalTests}</span>
-                                        </td>
-                                        <td className="px-4 py-2.5 whitespace-nowrap">
-                                            <span className="text-sm text-gray-700 dark:text-gray-300">{user.currentStreak}</span>
-                                        </td>
-                                    </tr>
-                                ))}
+                            <tbody className="divide-y divide-border">
+                                {rows.map((user) => {
+                                    const isMe = user.id === session?.user?.id;
+                                    return (
+                                        <tr key={user.id} className={isMe ? 'bg-accent/5' : 'hover:bg-surface-2/60'}>
+                                            <td className="px-5 py-3">
+                                                <RankCell rank={user.rank} />
+                                            </td>
+                                            <td className="px-2 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar name={user.name} image={user.image} size={32} />
+                                                    <span className="truncate font-medium text-fg">{user.name ?? 'Anonymous'}</span>
+                                                    {isMe && (
+                                                        <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-accent-text">
+                                                            you
+                                                        </span>
+                                                    )}
+                                                    {user.currentStreak >= 3 && (
+                                                        <span className="flex items-center gap-0.5 text-xs text-warning" title={`${user.currentStreak}-day streak`}>
+                                                            <FlameIcon width={14} height={14} /> {user.currentStreak}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-right font-mono font-semibold text-fg">{current.format(user)}</td>
+                                            <td className="hidden px-5 py-3 text-right font-mono text-muted sm:table-cell">
+                                                {metric === 'bestWpm' ? `${user.bestAccuracy}%` : `${user.bestWpm} wpm`}
+                                            </td>
+                                            <td className="hidden px-5 py-3 text-right font-mono text-muted md:table-cell">{user.totalTests}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     )}
@@ -191,20 +183,5 @@ function Leaderboard({
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-    const session = await getSession(context);
-
-    if (!session) {
-        return {
-            redirect: {
-                destination: '/auth/login',
-                permanent: false,
-            },
-        };
-    }
-
-    return {
-        props: { session },
-    };
+    return { props: { session: await getPageSession(context) } };
 }
-
-export default Leaderboard;
