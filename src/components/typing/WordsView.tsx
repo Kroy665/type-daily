@@ -1,7 +1,14 @@
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react';
 
-// Visible lines of text; the current line is kept second once you're past the first.
-const VISIBLE_LINES = 3;
+// Lines shown on phones, where the on-screen keyboard takes the lower half.
+// On wider screens the view fills TEST_AREA_HEIGHT with as many whole lines as
+// fit. Either way the current line is kept second once you're past the first.
+const MIN_LINES = 3;
+const LINE_HEIGHT_EM = 2.4;
+
+// Height of the test area from tablet width up, shared with the classic view:
+// the viewport minus the header, toolbar, progress bar and buttons.
+export const TEST_AREA_HEIGHT = 'md:h-[clamp(20rem,calc(100vh-13rem),56rem)]';
 
 // Typography shared by both views so Inline and Classic read the same.
 export const TYPING_TEXT = 'font-mono text-[1.35rem] leading-[2.4]';
@@ -76,7 +83,9 @@ const WordsView = forwardRef<TypingInputHandle, Props>(function WordsView({ word
     const [focused, setFocused] = useState(false);
     const [caret, setCaret] = useState({ x: 0, y: 0, h: 0 });
     const [offset, setOffset] = useState(0);
+    const textRef = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
+    const [lines, setLines] = useState(MIN_LINES);
 
     useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
 
@@ -113,7 +122,17 @@ const WordsView = forwardRef<TypingInputHandle, Props>(function WordsView({ word
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
-        const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+        const observer = new ResizeObserver(([entry]) => {
+            setWidth(entry.contentRect.width);
+            // From tablet width up the container has a fixed height; fit whole lines into it.
+            const text = textRef.current;
+            if (!text || !window.matchMedia('(min-width: 768px)').matches) {
+                setLines(MIN_LINES);
+                return;
+            }
+            const lineHeight = parseFloat(getComputedStyle(text).lineHeight);
+            setLines(Math.max(MIN_LINES, Math.floor(entry.contentRect.height / lineHeight)));
+        });
         observer.observe(el);
         return () => observer.disconnect();
     }, []);
@@ -127,7 +146,7 @@ const WordsView = forwardRef<TypingInputHandle, Props>(function WordsView({ word
     }, []);
 
     return (
-        <div ref={containerRef} className="relative" onClick={() => inputRef.current?.focus()}>
+        <div ref={containerRef} className={`relative ${TEST_AREA_HEIGHT}`} onClick={() => inputRef.current?.focus()}>
             <input
                 ref={inputRef}
                 value={typed}
@@ -150,10 +169,11 @@ const WordsView = forwardRef<TypingInputHandle, Props>(function WordsView({ word
                 className="absolute inset-0 z-10 h-full w-full cursor-default opacity-0"
             />
             <div
+                ref={textRef}
                 className={`overflow-hidden ${TYPING_TEXT} transition-[filter,opacity] duration-200 sm:text-[1.6rem] ${
                     !focused && !disabled ? 'opacity-40 blur-[3px]' : ''
                 }`}
-                style={{ height: `${VISIBLE_LINES * 2.4}em` }}
+                style={{ height: `${lines * LINE_HEIGHT_EM}em` }}
                 aria-hidden="true"
             >
                 <div

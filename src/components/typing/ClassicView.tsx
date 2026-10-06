@@ -1,13 +1,13 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { TYPING_TEXT, Word, type TypingInputHandle } from './WordsView';
+import { TEST_AREA_HEIGHT, TYPING_TEXT, Word, type TypingInputHandle } from './WordsView';
 
 // Both panes share one look and size: the same text style as the inline view,
 // tall enough to read several lines ahead, scaled to the viewport.
-// On wider screens the panes fill the viewport below the toolbar; the 13rem is
-// the header, toolbar, progress bar and buttons. On phones the typing box is
+// On wider screens the panes fill the test area (same height as the inline
+// view). On phones the typing box is
 // shorter so both panes stay above the on-screen keyboard. Scrollbars are
 // hidden; the panes still scroll (and follow the current word) as you type.
-const PANE = `no-scrollbar rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 md:h-[clamp(20rem,calc(100vh-13rem),56rem)] ${TYPING_TEXT}`;
+const PANE = `no-scrollbar rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 ${TEST_AREA_HEIGHT} ${TYPING_TEXT}`;
 
 interface Props {
     words: string[];
