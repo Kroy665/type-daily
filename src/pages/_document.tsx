@@ -10,7 +10,10 @@ export default function Document() {
       <Head>
         <meta name="theme-color" content="#0e0f13" media="(prefers-color-scheme: dark)" />
         <meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </Head>
       <body>

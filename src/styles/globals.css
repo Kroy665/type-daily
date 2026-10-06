@@ -109,3 +109,39 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Long-form content pages (about, privacy, terms, guides) */
+@layer components {
+  .prose-page {
+    @apply max-w-none text-[15px] leading-7 text-muted;
+  }
+  .prose-page h2 {
+    @apply mb-3 mt-10 text-xl font-semibold tracking-tight text-fg;
+  }
+  .prose-page h3 {
+    @apply mb-2 mt-6 text-base font-semibold text-fg;
+  }
+  .prose-page p,
+  .prose-page ul,
+  .prose-page ol {
+    @apply my-4;
+  }
+  .prose-page ul {
+    @apply list-disc pl-5;
+  }
+  .prose-page ol {
+    @apply list-decimal pl-5;
+  }
+  .prose-page li {
+    @apply my-1.5;
+  }
+  .prose-page a {
+    @apply font-medium text-accent-text underline-offset-4 hover:underline;
+  }
+  .prose-page strong {
+    @apply font-semibold text-fg;
+  }
+  .prose-page code {
+    @apply rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] text-fg;
+  }
+}

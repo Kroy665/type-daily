@@ -62,7 +62,7 @@ export default apiRoute(['POST'], async (req, res) => {
             timeZone: timeZone && isValidTimeZone(timeZone) ? timeZone : 'UTC',
             now,
         })
-        return { status: 201, body: { saved: true, score, result, unlocked } }
+        return { status: 201, body: { saved: true, score, resultId: result.id, unlocked } }
     })
 
     return res.status(outcome.status).json(outcome.body)

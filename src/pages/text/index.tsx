@@ -1,6 +1,7 @@
 import type { GetServerSidePropsContext } from 'next';
 import React, { useEffect, useMemo, useState } from 'react';
 import Layout, { PageHeader } from '@/components/Layout';
+import Seo from '@/components/Seo';
 import { TrashIcon } from '@/components/icons';
 import { api, errorMessage } from '@/lib/client';
 import { DIFFICULTIES, DURATIONS, DURATION_LABELS, type DifficultyValue, type DurationValue } from '@/lib/constants';
@@ -72,7 +73,8 @@ export default function TextManagement() {
     const visible = texts?.filter((t) => filter === 'ALL' || t.difficulty === filter) ?? [];
 
     return (
-        <Layout title="Manage texts">
+        <Layout>
+            <Seo title="Manage texts" noindex />
             <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
                 <PageHeader title="Texts" description="Passages that tests draw from, by difficulty and duration." />
 

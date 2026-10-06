@@ -1,13 +1,12 @@
-import type { GetServerSidePropsContext } from 'next';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import Layout, { PageHeader } from '@/components/Layout';
 import Avatar from '@/components/Avatar';
+import Seo from '@/components/Seo';
 import { FlameIcon } from '@/components/icons';
 import { api, errorMessage } from '@/lib/client';
 import type { LeaderboardMetric } from '@/lib/constants';
-import { getPageSession } from '@/lib/server/auth';
 import type { LeaderboardUser } from '@/types/api';
 
 const METRICS: { value: LeaderboardMetric; label: string; format: (u: LeaderboardUser) => string }[] = [
@@ -53,7 +52,11 @@ export default function Leaderboard() {
     }, [metric, signedIn]);
 
     return (
-        <Layout title="Leaderboard">
+        <Layout>
+            <Seo
+                title="Typing speed leaderboard"
+                description="See the fastest typists on TypeDaily, ranked by best WPM, accuracy, daily streak and tests completed. Every score is measured on the server, so the board can't be gamed."
+            />
             <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6">
                 <PageHeader
                     title="Leaderboard"
@@ -180,8 +183,4 @@ export default function Leaderboard() {
             </div>
         </Layout>
     );
-}
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-    return { props: { session: await getPageSession(context) } };
 }

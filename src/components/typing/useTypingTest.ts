@@ -14,7 +14,7 @@ export interface TestConfig {
 export type SaveState =
     | { kind: 'anonymous' }
     | { kind: 'saving' }
-    | { kind: 'saved'; unlocked: UnlockedAchievement[] }
+    | { kind: 'saved'; resultId: string; unlocked: UnlockedAchievement[] }
     | { kind: 'not-saved'; message: string };
 
 export interface FinalResult {
@@ -126,7 +126,7 @@ export function useTypingTest(config: TestConfig) {
                     score: res.score,
                     elapsedMs: elapsed,
                     save: res.saved
-                        ? { kind: 'saved', unlocked: res.unlocked }
+                        ? { kind: 'saved', resultId: res.resultId, unlocked: res.unlocked }
                         : { kind: 'not-saved', message: 'Type at least one word correctly to save a result.' },
                 });
             })

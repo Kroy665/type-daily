@@ -14,6 +14,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import Layout from '@/components/Layout';
 import Avatar from '@/components/Avatar';
+import Seo from '@/components/Seo';
 import { useTheme } from '@/context/ThemeContext';
 import { api, errorMessage } from '@/lib/client';
 import { DURATION_LABELS, type DurationValue } from '@/lib/constants';
@@ -159,7 +160,8 @@ export default function Profile() {
     const days = (n: number | undefined) => (n === 1 ? 'day' : 'days');
 
     return (
-        <Layout title="Profile">
+        <Layout>
+            <Seo title="Your profile" noindex />
             <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
                 <div className="mb-8 flex items-center gap-4">
                     <Avatar name={user?.name} image={user?.image} size={56} />
@@ -239,17 +241,23 @@ export default function Profile() {
                                 <h2 className="mb-4 text-base font-semibold text-fg">Recent tests</h2>
                                 <ul className="divide-y divide-border">
                                     {results.slice(-8).reverse().map((r) => (
-                                        <li key={r.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                                            <div>
-                                                <p className="font-mono font-semibold text-fg">{r.wpm} wpm</p>
-                                                <p className="text-xs text-muted">
-                                                    {r.difficulty.toLowerCase()} · {DURATION_LABELS[r.selectedTime as DurationValue] ?? `${r.selectedTime}s`}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-mono text-fg">{r.accuracy}%</p>
-                                                <p className="text-xs text-muted">{new Date(r.created).toLocaleDateString()}</p>
-                                            </div>
+                                        <li key={r.id}>
+                                            <Link
+                                                href={`/r/${r.id}`}
+                                                className="-mx-2 flex items-center justify-between gap-3 rounded-md px-2 py-2.5 text-sm hover:bg-surface-2"
+                                                title="Open shareable result card"
+                                            >
+                                                <div>
+                                                    <p className="font-mono font-semibold text-fg">{r.wpm} wpm</p>
+                                                    <p className="text-xs text-muted">
+                                                        {r.difficulty.toLowerCase()} · {DURATION_LABELS[r.selectedTime as DurationValue] ?? `${r.selectedTime}s`}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-mono text-fg">{r.accuracy}%</p>
+                                                    <p className="text-xs text-muted">{new Date(r.created).toLocaleDateString()}</p>
+                                                </div>
+                                            </Link>
                                         </li>
                                     ))}
                                 </ul>

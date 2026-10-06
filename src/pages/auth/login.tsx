@@ -1,5 +1,5 @@
 import type { GetServerSidePropsContext } from 'next';
-import Head from 'next/head';
+import Seo from '@/components/Seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signIn } from 'next-auth/react';
@@ -19,9 +19,7 @@ export default function Login() {
 
     return (
         <>
-            <Head>
-                <title>Sign in · TypeDaily</title>
-            </Head>
+            <Seo title="Sign in" noindex />
             <div className="grid min-h-screen place-items-center px-4">
                 <div className="w-full max-w-sm">
                     <div className="mb-8 flex justify-center">
