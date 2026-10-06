@@ -84,6 +84,8 @@ const TypingDiff = () => {
     const [showCursor, setShowCursor] = useState(true);
 
     const startTimeRef = useRef<number | null>(null);
+    // Latest typed value, read by handleFinish so stale closures (timer, memoized input handler) score the real input
+    const typedRef = useRef("");
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const textDisplayRef = useRef<HTMLDivElement>(null);
@@ -118,10 +120,15 @@ const TypingDiff = () => {
     }, [started, finished, time]);
 
     const handleFinish = () => {
-        setFinished(true);
         if (timerRef.current) clearInterval(timerRef.current);
 
-        const stats = computeStats(text, typed, elapsedMs);
+        const elapsed = startTimeRef.current
+            ? Math.min(Date.now() - startTimeRef.current, selectedTime * 1000)
+            : 0;
+        setElapsedMs(elapsed);
+        setFinished(true);
+
+        const stats = computeStats(text, typedRef.current, elapsed);
 
         if (session && session.user && stats.wpm > 0 && stats.accuracy > 0) {
             createResult({
@@ -145,6 +152,7 @@ const TypingDiff = () => {
 
             // Clamp to target length + some overflow buffer (max 50 extra chars)
             const clamped = value.slice(0, text.length + 50);
+            typedRef.current = clamped;
             setTyped(clamped);
 
             // Auto-finish when target fully typed correctly
@@ -168,6 +176,8 @@ const TypingDiff = () => {
 
             setText(randomText.text);
             setTyped("");
+            typedRef.current = "";
+            startTimeRef.current = null;
             setStarted(false);
             setFinished(false);
             setElapsedMs(0);
@@ -183,6 +193,7 @@ const TypingDiff = () => {
 
     const reset = () => {
         setTyped("");
+        typedRef.current = "";
         setStarted(false);
         setFinished(false);
         setElapsedMs(0);

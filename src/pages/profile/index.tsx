@@ -57,12 +57,15 @@ function Profile({
                 setAchievements(achievementsData);
                 setUserRank(rankData);
 
-                const sortedResults = results.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime());
+                // Copy before sorting so the store's array isn't mutated; chart the last 20 results
+                const recentResults = [...results]
+                    .sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
+                    .slice(-20);
 
-                const accuracyData = sortedResults.map(result => result.accuracy);
-                const wpmData = sortedResults.map(result => result.wpm);
+                const accuracyData = recentResults.map(result => result.accuracy);
+                const wpmData = recentResults.map(result => result.wpm);
 
-                const dateLabels = sortedResults.slice(Math.max(sortedResults.length - 20, 0)).map(result => {
+                const dateLabels = recentResults.map(result => {
                     const date = new Date(result.created);
                     return `${date.getDate()}/${date.getMonth() + 1}`;
                 });

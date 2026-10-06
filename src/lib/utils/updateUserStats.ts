@@ -81,19 +81,19 @@ async function checkAchievements(
 ) {
     const achievementsToUnlock: string[] = []
 
-    // Check WPM achievements
+    // Check WPM achievements (every tier reached, so lower tiers aren't skipped)
     if (stats.wpm >= 100) achievementsToUnlock.push('SPEED_DEMON')
-    else if (stats.wpm >= 75) achievementsToUnlock.push('SPEED_75')
-    else if (stats.wpm >= 50) achievementsToUnlock.push('SPEED_50')
+    if (stats.wpm >= 75) achievementsToUnlock.push('SPEED_75')
+    if (stats.wpm >= 50) achievementsToUnlock.push('SPEED_50')
 
     // Check accuracy achievements
     if (stats.accuracy === 100) achievementsToUnlock.push('PERFECTIONIST')
-    else if (stats.accuracy >= 95) achievementsToUnlock.push('ACCURACY_95')
-    else if (stats.accuracy >= 90) achievementsToUnlock.push('ACCURACY_90')
+    if (stats.accuracy >= 95) achievementsToUnlock.push('ACCURACY_95')
+    if (stats.accuracy >= 90) achievementsToUnlock.push('ACCURACY_90')
 
     // Check streak achievements
     if (stats.currentStreak >= 30) achievementsToUnlock.push('MARATHON')
-    else if (stats.currentStreak >= 7) achievementsToUnlock.push('CONSISTENT')
+    if (stats.currentStreak >= 7) achievementsToUnlock.push('CONSISTENT')
 
     // Check test count achievements
     if (stats.totalTests >= 100) achievementsToUnlock.push('CENTURY')

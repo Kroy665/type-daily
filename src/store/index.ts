@@ -46,7 +46,7 @@ export type StoreTypes = {
     getTexts: () => Promise<Text[]>;
     texts: Text[];
     getRandomText: (difficulty: Text['difficulty'], time: Text['time']) => Promise<Text>;
-    deleteText: (id: string) => Promise<Text>;
+    deleteText: (id: string) => Promise<Text | undefined>;
 
     // Leaderboard
     getLeaderboard: (orderBy?: string, limit?: number) => Promise<LeaderboardUser[]>;
@@ -55,6 +55,15 @@ export type StoreTypes = {
     // Achievements
     getAchievements: () => Promise<Achievement[]>;
 };
+
+// Throws with the API's error message so callers' try/catch can surface it
+async function parseOrThrow(res: Response, fallback: string) {
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+        throw new Error(data?.message || fallback);
+    }
+    return data;
+}
 
 export const useStore = create<StoreTypes>((set, get) => ({
     user: {
@@ -67,7 +76,8 @@ export const useStore = create<StoreTypes>((set, get) => ({
     setResults: (results) => set({ results }),
     getResults: async () => {
         const res = await fetch('/api/results/get-all');
-        const results = await res.json();
+        // Logged-out or failed requests leave an empty list rather than an error object
+        const results = res.ok ? await res.json() : [];
         get().setResults(results);
 
         return results;
@@ -80,6 +90,10 @@ export const useStore = create<StoreTypes>((set, get) => ({
             },
             body: JSON.stringify(result),
         });
+        if (!res.ok) {
+            console.error('Failed to save result:', res.status);
+            return;
+        }
         const newResult = await res.json();
         get().setResults([...get().results, newResult]);
     },
@@ -103,7 +117,7 @@ export const useStore = create<StoreTypes>((set, get) => ({
     },
     getTexts: async () => {
         const res = await fetch('/api/text/get-all');
-        const texts = await res.json();
+        const texts: Text[] = res.ok ? await res.json() : [];
 
         // sort by text length smallest to largest
         texts.sort((a: Text, b: Text) => a.text.split(' ').length - b.text.split(' ').length);
@@ -113,34 +127,34 @@ export const useStore = create<StoreTypes>((set, get) => ({
     texts: [],
     getRandomText: async (difficulty, time) => {
         const res = await fetch(`/api/text/get-random?difficulty=${difficulty}&time=${time}`);
-        const text = await res.json();
-        return text;
+        return parseOrThrow(res, 'Failed to load text');
     },
     deleteText: async (id) => {
         const res = await fetch(`/api/text/delete?id=${id}`, {
             method: 'DELETE',
         });
-        const text = await res.json();
-        return text;
+        if (!res.ok) {
+            console.error('Failed to delete text:', res.status);
+            return;
+        }
+        const { data } = await res.json();
+        return data;
     },
 
     // Leaderboard functions
     getLeaderboard: async (orderBy = 'bestWpm', limit = 100) => {
         const res = await fetch(`/api/leaderboard/global?orderBy=${orderBy}&limit=${limit}`);
-        const leaderboard = await res.json();
-        return leaderboard;
+        return parseOrThrow(res, 'Failed to load leaderboard');
     },
 
     getUserRank: async () => {
         const res = await fetch('/api/leaderboard/user-rank');
-        const userRank = await res.json();
-        return userRank;
+        return parseOrThrow(res, 'Failed to load rank');
     },
 
     // Achievements functions
     getAchievements: async () => {
         const res = await fetch('/api/achievements/user');
-        const achievements = await res.json();
-        return achievements;
+        return parseOrThrow(res, 'Failed to load achievements');
     },
 }));
