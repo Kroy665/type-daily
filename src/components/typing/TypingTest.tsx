@@ -130,60 +130,70 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     const live = test.liveScore;
     // WPM over the first couple of seconds is mostly noise; hold it back until it settles.
     const liveSettled = prefs.duration * 1000 - test.remainingMs >= 2000;
+    const finished = test.status === 'finished';
 
     return (
-        <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-14">
-            {/* Config */}
-            <div
-                className={`mb-10 flex flex-wrap items-center justify-center gap-2 transition-opacity duration-300 sm:gap-3 ${
-                    running ? 'pointer-events-none opacity-0 max-sm:hidden' : 'opacity-100'
-                }`}
-            >
-                <Segmented
-                    label="Difficulty"
-                    value={prefs.difficulty}
-                    options={DIFFICULTIES.map((d) => ({ value: d, label: d.charAt(0) + d.slice(1).toLowerCase() }))}
-                    onChange={(difficulty: DifficultyValue) => updatePrefs({ difficulty })}
-                    disabled={running}
-                />
-                <Segmented
-                    label="Duration"
-                    value={prefs.duration}
-                    options={DURATIONS.map((d) => ({ value: d, label: DURATION_LABELS[d] }))}
-                    onChange={(duration: DurationValue) => updatePrefs({ duration })}
-                    disabled={running}
-                />
-                <Segmented
-                    label="View"
-                    value={prefs.view}
-                    options={[
-                        { value: 'inline' as View, label: 'Inline' },
-                        { value: 'classic' as View, label: 'Classic' },
-                    ]}
-                    onChange={(view: View) => updatePrefs({ view })}
-                    disabled={running}
-                />
+        <div className="mx-auto w-full max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-10">
+            {/* Toolbar: timer, settings and live stats share one row on wide screens.
+                Settings fade out while typing (and collapse on phones) to keep focus on the text. */}
+            <div className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-4">
+                <div
+                    className={`order-1 min-w-[5.5rem] font-mono text-3xl font-semibold tabular-nums text-accent-text ${
+                        finished ? 'invisible' : ''
+                    }`}
+                    aria-label="Time remaining"
+                >
+                    {formatClock(test.remainingMs)}
+                </div>
+                <div
+                    className={`order-3 flex w-full flex-wrap items-center justify-center gap-2 transition-opacity duration-300 lg:order-2 lg:w-auto lg:flex-1 ${
+                        running ? 'pointer-events-none opacity-0 max-lg:hidden' : 'opacity-100'
+                    }`}
+                >
+                    <Segmented
+                        label="Difficulty"
+                        value={prefs.difficulty}
+                        options={DIFFICULTIES.map((d) => ({ value: d, label: d.charAt(0) + d.slice(1).toLowerCase() }))}
+                        onChange={(difficulty: DifficultyValue) => updatePrefs({ difficulty })}
+                        disabled={running}
+                    />
+                    <Segmented
+                        label="Duration"
+                        value={prefs.duration}
+                        options={DURATIONS.map((d) => ({ value: d, label: DURATION_LABELS[d] }))}
+                        onChange={(duration: DurationValue) => updatePrefs({ duration })}
+                        disabled={running}
+                    />
+                    <Segmented
+                        label="View"
+                        value={prefs.view}
+                        options={[
+                            { value: 'inline' as View, label: 'Inline' },
+                            { value: 'classic' as View, label: 'Classic' },
+                        ]}
+                        onChange={(view: View) => updatePrefs({ view })}
+                        disabled={running}
+                    />
+                </div>
+                <div
+                    className={`order-2 ml-auto flex min-w-[5.5rem] justify-end gap-5 font-mono text-sm text-muted transition-opacity lg:order-3 ${
+                        running ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    aria-live="off"
+                >
+                    <span>
+                        <span className="tabular-nums text-fg">{live && liveSettled ? live.wpm : '–'}</span> wpm
+                    </span>
+                    <span>
+                        <span className="tabular-nums text-fg">{live && liveSettled ? `${live.accuracy}%` : '–'}</span> acc
+                    </span>
+                </div>
             </div>
 
             {test.status === 'finished' && test.result ? (
                 <ResultsPanel result={test.result} duration={prefs.duration} onNext={test.nextText} onRestart={test.restart} />
             ) : (
                 <section aria-label="Typing test">
-                    {/* Live stats */}
-                    <div className="mb-4 flex items-end justify-between font-mono">
-                        <div className="text-3xl font-semibold text-accent-text tabular-nums" aria-label="Time remaining">
-                            {formatClock(test.remainingMs)}
-                        </div>
-                        <div className={`flex gap-5 text-sm text-muted transition-opacity ${running ? 'opacity-100' : 'opacity-0'}`}>
-                            <span>
-                                <span className="text-fg tabular-nums">{live && liveSettled ? live.wpm : '–'}</span> wpm
-                            </span>
-                            <span>
-                                <span className="text-fg tabular-nums">{live && liveSettled ? `${live.accuracy}%` : '–'}</span> acc
-                            </span>
-                        </div>
-                    </div>
-
                     {test.status === 'error' ? (
                         <div className="card flex flex-col items-center gap-4 px-6 py-12 text-center">
                             <p className="text-sm text-danger">{test.error}</p>

@@ -4,7 +4,7 @@ import { TYPING_TEXT, Word, type TypingInputHandle } from './WordsView';
 // Both panes share one look and size: the same text style as the inline view,
 // tall enough to read several lines ahead, scaled to the viewport.
 // On phones the typing box is shorter so both panes stay above the on-screen keyboard.
-const PANE = `rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 md:h-[clamp(20rem,55vh,38rem)] ${TYPING_TEXT}`;
+const PANE = `rounded-xl border border-border px-5 py-3 sm:px-6 sm:py-4 md:h-[clamp(20rem,calc(100vh-17rem),48rem)] ${TYPING_TEXT}`;
 
 interface Props {
     words: string[];
