@@ -1,6 +1,10 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import type { TypingInputHandle } from './WordsView';
 
+// Both panes share one size: tall enough to read several lines ahead, scaled to
+// the viewport so the test still fits on one screen.
+const PANE_SIZE = 'h-56 text-lg leading-9 sm:h-64 md:h-[clamp(20rem,55vh,38rem)] md:text-xl md:leading-10';
+
 interface Props {
     words: string[];
     typed: string;
@@ -35,7 +39,7 @@ const ClassicView = forwardRef<TypingInputHandle, Props>(function ClassicView({ 
         <div className="grid gap-4 md:grid-cols-2">
             <div
                 ref={sourceRef}
-                className="card h-64 select-none overflow-y-auto p-5 font-mono text-[1.05rem] leading-8 md:h-80"
+                className={`card select-none overflow-y-auto p-6 font-mono ${PANE_SIZE}`}
                 aria-label="Text to type"
             >
                 {words.map((word, i) => {
@@ -72,7 +76,7 @@ const ClassicView = forwardRef<TypingInputHandle, Props>(function ClassicView({ 
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                className="input h-64 resize-none p-5 font-mono text-[1.05rem] leading-8 md:h-80"
+                className={`input resize-none p-6 font-mono ${PANE_SIZE}`}
             />
         </div>
     );

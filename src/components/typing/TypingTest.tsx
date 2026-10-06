@@ -130,7 +130,7 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
     const live = test.liveScore;
 
     return (
-        <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-6 sm:px-6">
+        <div className={`mx-auto w-full px-4 pb-12 pt-6 sm:px-6 ${prefs.view === 'classic' ? 'max-w-7xl' : 'max-w-5xl'}`}>
             {/* Config */}
             <div
                 className={`mb-10 flex flex-wrap items-center justify-center gap-2 transition-opacity duration-300 sm:gap-3 ${
