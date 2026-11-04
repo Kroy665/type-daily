@@ -10,9 +10,11 @@ type View = 'inline' | 'classic';
 
 interface Prefs extends TestConfig {
     view: View;
+    /** Off = exam mode: typed characters can't be deleted. */
+    backspace: boolean;
 }
 
-const DEFAULT_PREFS: Prefs = { difficulty: 'EASY', duration: 60, view: 'inline' };
+const DEFAULT_PREFS: Prefs = { difficulty: 'EASY', duration: 60, view: 'inline', backspace: true };
 const PREFS_KEY = 'typedaily:prefs';
 
 function readPrefs(): Prefs {
@@ -22,6 +24,7 @@ function readPrefs(): Prefs {
             difficulty: DIFFICULTIES.includes(saved.difficulty) ? saved.difficulty : DEFAULT_PREFS.difficulty,
             duration: DURATIONS.includes(saved.duration) ? saved.duration : DEFAULT_PREFS.duration,
             view: saved.view === 'classic' ? 'classic' : 'inline',
+            backspace: saved.backspace !== false,
         };
     } catch {
         return DEFAULT_PREFS;
@@ -82,7 +85,10 @@ function formatClock(ms: number) {
 
 function TypingTestInner({ initial }: { initial: Prefs }) {
     const [prefs, setPrefs] = useState<Prefs>(initial);
-    const test = useTypingTest({ difficulty: prefs.difficulty, duration: prefs.duration });
+    const test = useTypingTest(
+        { difficulty: prefs.difficulty, duration: prefs.duration },
+        { allowBackspace: prefs.backspace },
+    );
     const inputRef = useRef<TypingInputHandle>(null);
     const running = test.status === 'running';
 
@@ -174,6 +180,16 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                         onChange={(view: View) => updatePrefs({ view })}
                         disabled={running}
                     />
+                    <Segmented
+                        label="Backspace"
+                        value={prefs.backspace ? 'on' : 'off'}
+                        options={[
+                            { value: 'on', label: 'Backspace on' },
+                            { value: 'off', label: 'Off' },
+                        ]}
+                        onChange={(value: string) => updatePrefs({ backspace: value === 'on' })}
+                        disabled={running}
+                    />
                 </div>
                 <div
                     className={`order-2 ml-auto flex min-w-[5.5rem] justify-end gap-5 font-mono text-sm text-muted transition-opacity lg:order-3 ${
@@ -246,8 +262,10 @@ function TypingTestInner({ initial }: { initial: Prefs }) {
                             <kbd className="kbd hidden sm:inline">tab</kbd>
                         </button>
                         {/* Same row as the buttons so it costs no extra height. */}
-                        <span className={`px-2 text-subtle ${test.status === 'ready' ? '' : 'invisible'}`}>
-                            The timer starts on your first keystroke.
+                        <span className="px-2 text-subtle">
+                            {/* While typing, keep the exam-mode reminder visible; the timer hint is only useful before starting. */}
+                            {!prefs.backspace && <span className="font-medium text-warning">Backspace is off. </span>}
+                            <span className={test.status === 'ready' ? '' : 'invisible'}>The timer starts on your first keystroke.</span>
                         </span>
                     </div>
                 </section>

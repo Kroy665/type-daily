@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, ApiError, errorMessage } from '@/lib/client';
 import { isComplete, scoreTest, splitWords, type Score } from '@/lib/scoring';
+import { isAllowedEdit } from '@/lib/input';
 import type { DifficultyValue, DurationValue } from '@/lib/constants';
 import type { UnlockedAchievement } from '@/types/api';
 
@@ -44,7 +45,7 @@ function localTimeZone(): string {
     }
 }
 
-export function useTypingTest(config: TestConfig) {
+export function useTypingTest(config: TestConfig, { allowBackspace = true }: { allowBackspace?: boolean } = {}) {
     const [status, setStatusState] = useState<TestStatus>('loading');
     const [text, setText] = useState('');
     const [typed, setTyped] = useState('');
@@ -60,6 +61,9 @@ export function useTypingTest(config: TestConfig) {
     const startRef = useRef(0);
     const sessionRef = useRef<{ sessionId: string | null; textId: string | null }>({ sessionId: null, textId: null });
     const loadSeq = useRef(0);
+    // Read through a ref so toggling the setting doesn't recreate the input handler.
+    const allowBackspaceRef = useRef(allowBackspace);
+    allowBackspaceRef.current = allowBackspace;
     const durationMs = config.duration * 1000;
 
     const setStatus = (next: TestStatus) => {
@@ -156,6 +160,8 @@ export function useTypingTest(config: TestConfig) {
             if (current !== 'ready' && current !== 'running') return;
 
             const value = sanitizeInput(raw, splitWords(textRef.current), textRef.current.length);
+            // Rejected edits leave state unchanged, so the controlled input snaps back.
+            if (!isAllowedEdit(typedRef.current, value, allowBackspaceRef.current)) return;
 
             if (current === 'ready') {
                 if (!value) return;
